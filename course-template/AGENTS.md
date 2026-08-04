@@ -180,7 +180,7 @@ See also `catalog.entry.js` in this folder.
 
 **B. `index.html`**
 
-Add script tags **before** the app scripts (`js/storage.js`), after other courses:
+Add script tags **before** the module entry point (`js/main.js`), after other courses:
 
 ```html
 <script src="courses/<course-id>/course.js"></script>
@@ -188,7 +188,7 @@ Add script tags **before** the app scripts (`js/storage.js`), after other course
 <script src="courses/catalog.js"></script>
 ```
 
-`catalog.js` must load **after** all `course.js` / `notes.js` files (or at least after the courses it lists are registered — order among course packages is free; catalog last is safest).
+`catalog.js` must load **after** all `course.js` / `notes.js` files (or at least after the courses it lists are registered — order among course packages is free; catalog last is safest). All course scripts must appear before the `<script type="module" src="js/main.js">` tag.
 
 Snippet reference: `index.scripts.html`.
 
@@ -235,7 +235,7 @@ ls courses/<id>/videos | sort
 
 ## Player path resolution (reference)
 
-From `js/app.js`:
+From `js/state.js`:
 
 - Prefer `course.data.root` (e.g. `courses/my-course`)
 - Else `courses/<id>`

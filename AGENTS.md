@@ -4,7 +4,7 @@
 
 | Path | Tracked? | Role |
 |------|----------|------|
-| `index.html`, `css/`, `js/`, `fonts/` | yes | CourseDesk player app |
+| `index.html`, `css/`, `js/`, `fonts/` | yes | CourseDesk player app (ES modules in `js/`) |
 | `course-template/` | yes | Starter package + packaging guide |
 | `courses/` | **no** (gitignored) | Local course content: videos, notes, catalog |
 
