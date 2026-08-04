@@ -1,0 +1,17 @@
+# Local course packages (videos, notes, generated curriculum)
+# Keep the directory via courses/.gitkeep — content is machine-local.
+courses/*
+!courses/.gitkeep
+
+# OS / editor
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Logs / env
+*.log
+.env
+.env.*
