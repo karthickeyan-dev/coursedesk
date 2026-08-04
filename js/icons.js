@@ -19,6 +19,7 @@
   function lucide(name, children, size, className) {
     var s = size == null ? 24 : size;
     var cls = ("lucide lucide-" + name + (className ? " " + className : "")).trim();
+    var fillMode = (name === "check" || name === "maximize" || name === "minimize" || name === "chevron-right") ? "none" : "currentColor";
     return (
       '<svg class="' +
       cls +
@@ -26,7 +27,7 @@
       s +
       '" height="' +
       s +
-      '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '" viewBox="0 0 24 24" fill="' + fillMode + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       children +
       "</svg>"
     );
