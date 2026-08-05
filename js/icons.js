@@ -19,7 +19,24 @@
   function lucide(name, children, size, className) {
     var s = size == null ? 24 : size;
     var cls = ("lucide lucide-" + name + (className ? " " + className : "")).trim();
-    var fillMode = (name === "check" || name === "maximize" || name === "minimize" || name === "chevron-right") ? "none" : "currentColor";
+    var strokeOnly = {
+      check: 1,
+      maximize: 1,
+      minimize: 1,
+      "chevron-right": 1,
+      file: 1,
+      "file-text": 1,
+      "file-code": 1,
+      "file-type": 1,
+      image: 1,
+      film: 1,
+      music: 1,
+      type: 1,
+      sun: 1,
+      moon: 1,
+      gauge: 1,
+    };
+    var fillMode = strokeOnly[name] ? "none" : "currentColor";
     return (
       '<svg class="' +
       cls +
@@ -88,6 +105,48 @@
     moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
     "chevron-right": '<path d="m9 18 6-6-6-6"/>',
     check: '<path d="M20 6 9 17l-5-5"/>',
+    /* File-type icons (lucide-static) for the Files panel */
+    file:
+      '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>' +
+      '<path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+    "file-text":
+      '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>' +
+      '<path d="M14 2v4a2 2 0 0 0 2 2h4"/>' +
+      '<path d="M10 9H8"/>' +
+      '<path d="M16 13H8"/>' +
+      '<path d="M16 17H8"/>',
+    image:
+      '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>' +
+      '<circle cx="9" cy="9" r="2"/>' +
+      '<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+    film:
+      '<rect width="18" height="18" x="3" y="3" rx="2"/>' +
+      '<path d="M7 3v18"/>' +
+      '<path d="M3 7.5h4"/>' +
+      '<path d="M3 12h18"/>' +
+      '<path d="M3 16.5h4"/>' +
+      '<path d="M17 3v18"/>' +
+      '<path d="M17 7.5h4"/>' +
+      '<path d="M17 16.5h4"/>',
+    music:
+      '<path d="M9 18V5l12-2v13"/>' +
+      '<circle cx="6" cy="18" r="3"/>' +
+      '<circle cx="18" cy="16" r="3"/>',
+    "file-code":
+      '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>' +
+      '<path d="M14 2v4a2 2 0 0 0 2 2h4"/>' +
+      '<path d="m10 13-2 2 2 2"/>' +
+      '<path d="m14 17 2-2-2-2"/>',
+    "file-type":
+      '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>' +
+      '<path d="M14 2v4a2 2 0 0 0 2 2h4"/>' +
+      '<path d="M9 13v-1h6v1"/>' +
+      '<path d="M12 12v6"/>' +
+      '<path d="M11 18h2"/>',
+    type:
+      '<polyline points="4 7 4 4 20 4 20 7"/>' +
+      '<line x1="9" x2="15" y1="20" y2="20"/>' +
+      '<line x1="12" x2="12" y1="4" y2="20"/>',
   };
 
   /**
@@ -160,6 +219,47 @@
     },
     fullscreen: function (className) {
       return lucideIcon("maximize", 18, className || "");
+    },
+
+    /**
+     * Icon for a file path / extension (Files sidebar).
+     * @param {string} pathOrExt e.g. "assets/a.pdf" or "pdf"
+     * @param {number} [size=18]
+     */
+    fileType: function (pathOrExt, size) {
+      var ext = String(pathOrExt || "").trim().toLowerCase();
+      var m = ext.match(/\.([a-z0-9]+)$/);
+      if (m) ext = m[1];
+      else if (ext.indexOf(".") !== -1) ext = ext.split(".").pop();
+
+      var name = "file";
+      if (["pdf", "txt", "md", "doc", "docx", "rtf"].indexOf(ext) !== -1) {
+        name = "file-text";
+      } else if (
+        ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico", "avif"].indexOf(
+          ext
+        ) !== -1
+      ) {
+        name = "image";
+      } else if (
+        ["mp4", "webm", "mov", "mkv", "avi", "m4v"].indexOf(ext) !== -1
+      ) {
+        name = "film";
+      } else if (["mp3", "wav", "ogg", "m4a", "aac", "flac"].indexOf(ext) !== -1) {
+        name = "music";
+      } else if (
+        ["js", "ts", "tsx", "jsx", "json", "html", "css", "py", "rb", "go"].indexOf(
+          ext
+        ) !== -1
+      ) {
+        name = "file-code";
+      } else if (["otf", "ttf", "woff", "woff2"].indexOf(ext) !== -1) {
+        name = "type";
+      } else if (["fig", "ai", "sketch", "psd"].indexOf(ext) !== -1) {
+        name = "file-type";
+      }
+
+      return lucideIcon(name, size == null ? 18 : size, "file-type-icon");
     },
   };
 

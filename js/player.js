@@ -114,6 +114,12 @@
 
     var lastVolume = video.volume > 0 ? video.volume : 1;
     var hudTimer = null;
+    /** Pending resume time (seconds) applied on loadedmetadata */
+    var pendingResumeTime = null;
+    /** Optional callback(seconds) while playing — used for progress persistence */
+    var onTimePersist = null;
+    var lastPersistAt = 0;
+    var PERSIST_MS = 2000;
 
     function isVideoActive() {
       return !video.classList.contains("hidden") && !!video.getAttribute("src");
@@ -410,18 +416,54 @@
       }
     }
 
-    function showVideo(src) {
+    /**
+     * @param {string} src
+     * @param {{ startTime?: number }} [options]
+     */
+    function showVideo(src, options) {
+      options = options || {};
+      var startTime =
+        typeof options.startTime === "number" && isFinite(options.startTime)
+          ? options.startTime
+          : null;
+
       video.classList.remove("hidden");
       setControlsVisible(true);
-      if (video.getAttribute("src") !== src) {
+
+      var sameSrc = video.getAttribute("src") === src;
+      if (!sameSrc) {
+        pendingResumeTime = startTime;
         video.src = src;
+      } else if (startTime != null && startTime > 0) {
+        // Same source re-opened — seek immediately if metadata already loaded
+        if (isFinite(video.duration) && video.duration > 0) {
+          applyResumeTime(startTime);
+        } else {
+          pendingResumeTime = startTime;
+        }
       }
+
       updatePlayPauseUI();
       updateSeekUI();
       updateMuteUI();
     }
 
+    function applyResumeTime(seconds) {
+      var duration = video.duration;
+      if (!isFinite(duration) || duration <= 0) return;
+      // Don't resume in the last 5s (or last 2% for long videos) — start over
+      var endThreshold = Math.max(5, duration * 0.02);
+      if (seconds >= duration - endThreshold) {
+        video.currentTime = 0;
+      } else if (seconds > 2) {
+        video.currentTime = Math.min(seconds, duration - 0.25);
+      }
+      updateSeekUI();
+    }
+
     function hideVideo() {
+      persistTimeNow();
+      pendingResumeTime = null;
       video.pause();
       video.removeAttribute("src");
       video.load();
@@ -429,6 +471,26 @@
       setControlsVisible(false);
       setSeekProgress(0);
       hideHud();
+    }
+
+    function setTimePersistHandler(fn) {
+      onTimePersist = typeof fn === "function" ? fn : null;
+    }
+
+    function persistTimeNow() {
+      if (!onTimePersist || !isVideoActive()) return;
+      if (!isFinite(video.currentTime)) return;
+      onTimePersist(video.currentTime);
+      lastPersistAt = Date.now();
+    }
+
+    function maybePersistTime() {
+      if (!onTimePersist || !isVideoActive()) return;
+      var now = Date.now();
+      if (now - lastPersistAt < PERSIST_MS) return;
+      lastPersistAt = now;
+      if (!isFinite(video.currentTime)) return;
+      onTimePersist(video.currentTime);
     }
 
     function bindEvents() {
@@ -456,10 +518,28 @@
       });
 
       video.addEventListener("play", updatePlayPauseUI);
-      video.addEventListener("pause", updatePlayPauseUI);
-      video.addEventListener("ended", updatePlayPauseUI);
-      video.addEventListener("timeupdate", updateSeekUI);
-      video.addEventListener("loadedmetadata", updateSeekUI);
+      video.addEventListener("pause", function () {
+        updatePlayPauseUI();
+        persistTimeNow();
+      });
+      video.addEventListener("ended", function () {
+        updatePlayPauseUI();
+        // Treat finished video as completed position near end — next open starts over
+        if (onTimePersist && isFinite(video.duration)) {
+          onTimePersist(video.duration);
+        }
+      });
+      video.addEventListener("timeupdate", function () {
+        updateSeekUI();
+        maybePersistTime();
+      });
+      video.addEventListener("loadedmetadata", function () {
+        if (pendingResumeTime != null) {
+          applyResumeTime(pendingResumeTime);
+          pendingResumeTime = null;
+        }
+        updateSeekUI();
+      });
       video.addEventListener("volumechange", function () {
         if (!isMuted() && video.volume > 0) lastVolume = video.volume;
         updateMuteUI();
@@ -468,6 +548,11 @@
         updatePlayPauseUI();
         updateSeekUI();
         updateMuteUI();
+      });
+
+      window.addEventListener("pagehide", persistTimeNow);
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") persistTimeNow();
       });
 
       updatePlayPauseUI();
@@ -481,6 +566,8 @@
       showVideo: showVideo,
       hideVideo: hideVideo,
       formatTime: formatTime,
+      setTimePersistHandler: setTimePersistHandler,
+      persistTimeNow: persistTimeNow,
     };
   }
 

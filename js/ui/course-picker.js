@@ -106,70 +106,67 @@
     availableCourses.forEach(function (course, index) {
       var card = document.createElement("button");
       card.type = "button";
-      card.className = "course-card";
+      card.className = "course-thumb";
       card.setAttribute("role", "listitem");
       card.style.setProperty("--card-hue", String((index * 47 + 268) % 360));
 
       var title = course.data.title || course.meta.title || "Course";
       var author = course.data.author || course.meta.author || "Course";
-      var description =
-        course.data.description || course.meta.description || "";
-      var lessonCount = course.data.lessons.length;
-      var videoCount = course.data.lessons.filter(function (l) { return l.video; }).length;
-      var notesCount = Object.keys(course.notes || {}).length;
+      var lessons = course.data.lessons || [];
+      var lessonCount = lessons.length;
       var finished = Storage.loadFinishedIds(course.data.id);
-      var done = Math.min(finished.size, lessonCount);
+      var done = lessons.reduce(function (n, lesson) {
+        return n + (finished.has(lesson.id) ? 1 : 0);
+      }, 0);
       var percent = lessonCount ? Math.round((done / lessonCount) * 100) : 0;
-      var ctaLabel =
-        percent > 0 && percent < 100
-          ? "Continue"
+      var totalSeconds = State.sumLessonDurations(lessons);
+      var durationLabel =
+        totalSeconds > 0 ? State.formatDurationTotal(totalSeconds) : "";
+      var progressLabel =
+        percent === 0
+          ? "Not started"
           : percent === 100
-          ? "Review"
-          : "Start course";
+          ? "Completed"
+          : done + " / " + lessonCount + " · " + percent + "%";
+      var metaParts = [
+        lessonCount + (lessonCount === 1 ? " lesson" : " lessons"),
+      ];
+      if (durationLabel) metaParts.push(durationLabel);
 
       card.innerHTML =
-        '<div class="course-card-cover" aria-hidden="true">' +
-        '<span class="course-card-mono"></span>' +
-        '<span class="course-card-cover-label">Course</span>' +
+        '<div class="course-thumb-media" aria-hidden="true">' +
+        '<span class="course-thumb-mono"></span>' +
+        '<span class="course-thumb-badge"></span>' +
+        '<div class="course-thumb-progress-track">' +
+        '<div class="course-thumb-progress-fill"></div>' +
         "</div>" +
-        '<div class="course-card-body">' +
-        '<div class="course-card-top">' +
-        '<div class="course-card-author"></div>' +
-        '<div class="course-card-progress-label"></div>' +
         "</div>" +
-        '<h3 class="course-card-title"></h3>' +
-        '<p class="course-card-desc"></p>' +
-        '<div class="course-card-stats">' +
-        '<span class="course-stat" data-stat="lessons"></span>' +
-        '<span class="course-stat" data-stat="videos"></span>' +
-        '<span class="course-stat" data-stat="notes"></span>' +
-        "</div>" +
-        '<div class="course-card-footer">' +
-        '<div class="course-card-progress-track" aria-hidden="true">' +
-        '<div class="course-card-progress-fill"></div>' +
-        "</div>" +
-        '<span class="course-card-cta"></span>' +
-        "</div>" +
+        '<div class="course-thumb-body">' +
+        '<h3 class="course-thumb-title"></h3>' +
+        '<p class="course-thumb-author"></p>' +
+        '<p class="course-thumb-meta"></p>' +
+        '<p class="course-thumb-progress-label"></p>' +
         "</div>";
 
-      card.querySelector(".course-card-mono").textContent =
+      card.querySelector(".course-thumb-mono").textContent =
         State.courseMonogram(title);
-      card.querySelector(".course-card-author").textContent = author;
-      card.querySelector(".course-card-progress-label").textContent =
-        percent + "% complete";
-      card.querySelector(".course-card-title").textContent = title;
-      card.querySelector(".course-card-desc").textContent = description;
-      card.querySelector('[data-stat="lessons"]').textContent =
-        lessonCount + (lessonCount === 1 ? " lesson" : " lessons");
-      card.querySelector('[data-stat="videos"]').textContent =
-        videoCount + (videoCount === 1 ? " video" : " videos");
-      card.querySelector('[data-stat="notes"]').textContent =
-        notesCount + (notesCount === 1 ? " note" : " notes");
-      card.querySelector(".course-card-progress-fill").style.width =
+      card.querySelector(".course-thumb-badge").textContent =
+        percent > 0 ? percent + "%" : "New";
+      card.querySelector(".course-thumb-progress-fill").style.width =
         percent + "%";
-      card.querySelector(".course-card-cta").textContent = ctaLabel;
+      card.querySelector(".course-thumb-title").textContent = title;
+      card.querySelector(".course-thumb-author").textContent = author;
+      card.querySelector(".course-thumb-meta").textContent = metaParts.join(" · ");
+      card.querySelector(".course-thumb-progress-label").textContent =
+        progressLabel;
+      card.setAttribute(
+        "aria-label",
+        title + " by " + author + ". " + progressLabel + "."
+      );
 
-      card.addEventListener("click", function () { openCourse(course.data.id, ns.videoPlayerRef); });
+      card.addEventListener("click", function () {
+        openCourse(course.data.id, ns.videoPlayerRef);
+      });
       ui.coursePicker.appendChild(card);
     });
   }

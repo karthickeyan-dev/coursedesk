@@ -104,6 +104,39 @@
     if (categoryId) writeRaw(key(courseId, "openCategory"), categoryId);
   }
 
+  /** Map of lessonId → last playback position in seconds. */
+  function loadLessonTimes(courseId) {
+    var parsed = readJson(key(courseId, "lessonTimes"), {});
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed
+      : {};
+  }
+
+  function loadLessonTime(courseId, lessonId) {
+    if (!courseId || !lessonId) return 0;
+    var map = loadLessonTimes(courseId);
+    var raw = map[lessonId];
+    var n = typeof raw === "number" ? raw : Number(raw);
+    return isFinite(n) && n > 0 ? n : 0;
+  }
+
+  function saveLessonTime(courseId, lessonId, seconds) {
+    if (!courseId || !lessonId) return;
+    var t = Math.floor(Number(seconds) || 0);
+    if (t < 0) t = 0;
+    var map = loadLessonTimes(courseId);
+    if (t < 3) {
+      // Near the start — drop the key so we don't resume at 0–2s
+      if (map[lessonId] != null) {
+        delete map[lessonId];
+        writeJson(key(courseId, "lessonTimes"), map);
+      }
+      return;
+    }
+    map[lessonId] = t;
+    writeJson(key(courseId, "lessonTimes"), map);
+  }
+
   ns.Storage = {
     loadTheme: loadTheme,
     saveTheme: saveTheme,
@@ -117,5 +150,8 @@
     saveLastLessonId: saveLastLessonId,
     loadOpenCategoryId: loadOpenCategoryId,
     saveOpenCategoryId: saveOpenCategoryId,
+    loadLessonTimes: loadLessonTimes,
+    loadLessonTime: loadLessonTime,
+    saveLessonTime: saveLessonTime,
   };
 })(window);

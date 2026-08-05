@@ -25,6 +25,8 @@ courses/<course-id>/
   assets/            # optional images, pdfs, zip downloads, …
 ```
 
+Optional **`resources`** on the course object list downloadable exercise files. When present and non-empty, the player shows a **Files** tab in the course sidebar (next to **Content**).
+
 Copy structure from `course-template/` (this directory). Do **not** edit the template in place as the live course — always copy into `courses/<course-id>/`.
 
 ---
@@ -138,6 +140,30 @@ Use `ffprobe` when available to fill duration:
 ```bash
 ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "courses/<id>/videos/001-welcome.mp4"
 ```
+
+Optional **`resources`** array (sidebar Files tab):
+
+```js
+resources: [
+  {
+    id: "class-projects",
+    title: "Class Projects",
+    path: "assets/class-projects.pdf",
+    description: "All project briefs",
+    group: "Class projects",
+  },
+  {
+    id: "icon-home",
+    title: "Icon Home",
+    path: "assets/icons/icon-home.svg",
+    group: "Icons",
+  },
+]
+```
+
+- Paths are relative to the course folder (same as `video`).
+- `group` clusters items under headings in the Files tab.
+- Omit `resources` or use `[]` if the course has no downloads — the Files tab stays hidden.
 
 ### 6. Write `notes.js` (optional)
 

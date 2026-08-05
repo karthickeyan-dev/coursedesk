@@ -22,6 +22,13 @@
  *   num         string  optional  lecture number shown in UI
  *   video       string  optional  e.g. "videos/01-welcome.mp4"
  *   duration    number  optional  length in seconds (curriculum UI)
+ *
+ * Optional course.resources[] powers the Files tab in the course sidebar:
+ *   id           string  required  stable id
+ *   title        string  required
+ *   path         string  required  relative to course root (e.g. assets/brief.pdf)
+ *   description  string  optional
+ *   group        string  optional  section heading in the Files list
  */
 (function (global) {
   "use strict";
@@ -38,6 +45,16 @@
     categories: [
       { id: "getting-started", title: "Getting Started" },
       { id: "deep-dive", title: "Deep Dive" },
+    ],
+    // Optional — omit or use [] to hide the Files tab
+    resources: [
+      // {
+      //   id: "cheatsheet",
+      //   title: "Course cheatsheet",
+      //   path: "assets/cheatsheet.pdf",
+      //   description: "Printable reference",
+      //   group: "Reference",
+      // },
     ],
     lessons: [
       {

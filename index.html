@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CourseDesk</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/hljs-dark.css" />
 </head>
@@ -33,11 +34,11 @@
           <span id="progressText">0% complete</span>
           <div class="progress-dropdown" id="progressDropdown" role="tooltip">
             <div class="progress-dropdown-row">
-              <span class="progress-dropdown-label">Lectures completed</span>
+              <span class="progress-dropdown-label" id="progressLecturesLabel">Lectures completed</span>
               <strong id="progressLecturesStat">0 / 0</strong>
             </div>
             <div class="progress-dropdown-row">
-              <span class="progress-dropdown-label">Time completed</span>
+              <span class="progress-dropdown-label" id="progressTimeLabel">Time completed</span>
               <strong id="progressTimeStat">0m / 0m</strong>
             </div>
           </div>
@@ -131,14 +132,23 @@
             </div>
           </section>
 
-          <section class="notes-panel" aria-label="Lecture notes">
+          <section class="notes-panel" aria-label="Overview">
             <article id="notesBody" class="notes-body prose"></article>
           </section>
         </div>
       </main>
 
-      <aside class="curriculum" id="curriculum" aria-label="Course content">
-        <nav class="curriculum-list" id="nav"></nav>
+      <aside class="curriculum" id="curriculum" aria-label="Course sidebar">
+        <div class="sidebar-tabs" id="sidebarTabs" role="tablist" aria-label="Sidebar panels">
+          <button type="button" class="sidebar-tab is-active" id="tabContent" role="tab" aria-selected="true" aria-controls="panelContent" data-tab="content">Content</button>
+          <button type="button" class="sidebar-tab hidden" id="tabFiles" role="tab" aria-selected="false" aria-controls="panelFiles" data-tab="files">Files</button>
+        </div>
+        <div id="panelContent" class="sidebar-panel is-active" role="tabpanel" aria-labelledby="tabContent">
+          <nav class="curriculum-list" id="nav"></nav>
+        </div>
+        <div id="panelFiles" class="sidebar-panel" role="tabpanel" aria-labelledby="tabFiles" hidden>
+          <div id="filesBody" class="files-body"></div>
+        </div>
       </aside>
     </div>
   </div>
@@ -160,11 +170,16 @@
   <!--
     Local course packages (gitignored): courses/<id>/
       course.js  notes.js (optional)  videos/  assets/
+      course.resources[] → Files tab in the course sidebar
     Template + AI packaging guide: course-template/ (see AGENTS.md there)
     Load each course.js (+ notes.js if present), then catalog.js last.
   -->
   <script src="courses/react-native-2026/course.js"></script>
   <script src="courses/react-native-2026/notes.js"></script>
+  <script src="courses/figma-essentials/course.js"></script>
+  <script src="courses/figma-essentials/notes.js"></script>
+  <script src="courses/figma-advanced/course.js"></script>
+  <script src="courses/figma-advanced/notes.js"></script>
   <script src="courses/catalog.js"></script>
 
   <!-- App Entry -->
