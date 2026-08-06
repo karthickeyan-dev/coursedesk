@@ -6,7 +6,8 @@
   --bg-elevated: #2a2b2d;
   --panel: #2d2f31;
   --panel-2: #3e4143;
-  --border: #3e4143;
+  /* Slightly lighter than panel-2 so dividers read on section headers */
+  --border: #505356;
   --text: #f7f9fa;
   --muted: #d1d7dc;
   --muted-2: #9da3a9;
@@ -15,6 +16,9 @@
   --accent-soft: rgba(164, 53, 240, 0.16);
   --ok: #19c37d;
   --ok-soft: rgba(25, 195, 125, 0.15);
+  /* Empty checkbox ring — must contrast on both --panel and --panel-2 */
+  --check-border: #8b9198;
+  --check-mark: #ffffff;
   --player-bg: #000;
   --sidebar-w: 460px;
   --topbar-h: 56px;
@@ -68,6 +72,8 @@
   --accent-soft: rgba(164, 53, 240, 0.1);
   --ok: #1e6055;
   --ok-soft: rgba(30, 96, 85, 0.12);
+  --check-border: #8a8f94;
+  --check-mark: #ffffff;
   --player-bg: #000;
   --shadow: 0 2px 8px rgba(28, 29, 31, 0.08);
 }
@@ -1089,7 +1095,7 @@ a {
   top: 0;
   width: 5px;
   height: 9px;
-  border: solid #fff;
+  border: solid var(--check-mark);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -1579,11 +1585,7 @@ a {
 }
 
 .category-toggle:hover {
-  filter: brightness(1.03);
-}
-
-:root[data-theme="light"] .category-toggle:hover {
-  background: #e9ebed;
+  background: color-mix(in srgb, var(--text) 7%, var(--panel-2));
 }
 
 .category-toggle .category-text {
@@ -1631,17 +1633,17 @@ a {
 .category-toggle.done .section-check {
   border-color: var(--ok);
   background: var(--ok);
-  color: #fff;
+  color: var(--check-mark);
 }
 
 .category-toggle.partial .section-check {
   border-color: var(--ok);
-  background: color-mix(in srgb, var(--ok) 28%, transparent);
+  background: color-mix(in srgb, var(--ok) 22%, var(--panel-2));
   color: var(--ok);
 }
 
 .category-toggle.partial .section-check svg {
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .category-lessons {
@@ -1685,18 +1687,36 @@ a {
   height: 18px;
   margin-top: 1px;
   border-radius: 50%;
-  border: 2px solid var(--border);
+  border: 2px solid var(--check-border);
   display: grid;
   place-items: center;
   color: transparent;
   background: transparent;
   flex: none;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.check .lucide,
+.check svg {
+  width: 10px;
+  height: 10px;
+  display: block;
+  /* Stroke inherits from .check color (transparent until done/partial) */
+  stroke: currentColor;
+}
+
+.lesson-btn:hover:not(.done) .check,
+.category-toggle:hover:not(.done):not(.partial) .section-check {
+  border-color: color-mix(in srgb, var(--check-border) 45%, var(--text));
 }
 
 .lesson-btn.done .check {
   border-color: var(--ok);
   background: var(--ok);
-  color: #fff;
+  color: var(--check-mark);
 }
 
 .title-wrap {
