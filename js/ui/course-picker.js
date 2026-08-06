@@ -48,6 +48,8 @@
 
   function showCoursePicker(videoPlayer) {
     State.resetState();
+    // Clear so a refresh on the library stays on the library (not last course).
+    Storage.saveActiveCourseId(null);
 
     videoPlayer.hideVideo();
     ui.lessonView.classList.add("hidden");

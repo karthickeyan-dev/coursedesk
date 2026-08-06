@@ -181,8 +181,14 @@
     applyTheme(Storage.loadTheme());
     setCurriculumOpen(Storage.loadCurriculumOpen(true));
 
-    // Load courses and show either the last course or the picker
+    // Load courses, drop progress for courses no longer registered, then open
+    // the last course or the library picker.
     var availableCourses = CoursePicker.initCourses();
+    Storage.pruneCourses(
+      availableCourses.map(function (c) {
+        return c.data.id;
+      })
+    );
 
     var lastCourseId = Storage.loadActiveCourseId();
     if (lastCourseId && availableCourses.some(function (c) { return c.data.id === lastCourseId; })) {

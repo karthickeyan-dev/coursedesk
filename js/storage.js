@@ -1,18 +1,37 @@
 /**
- * Safe localStorage helpers. Progress is scoped per course id.
+ * localStorage helpers — prefs and course progress as separate keys.
+ *
+ *   coursedesk.theme         "dark" | "light"
+ *   coursedesk.sidebar       "1" | "0"  (curriculum open)
+ *   coursedesk.activeCourse  course id (removed when on library)
+ *   coursedesk.courses       JSON map of courseId → progress
+ *
+ * Progress record:
+ *   { completedLessonIds, lastLessonId, openCategoryId, playbackPositions }
+ *
+ * Public load/save methods keep stable signatures for UI modules.
+ * Orphaned course entries are removed via pruneCourses(validIds).
  */
 (function (global) {
   "use strict";
 
   var ns = (global.CourseDesk = global.CourseDesk || {});
 
-  var PREFIX = "cwb.v2";
+  var PREFIX = "coursedesk";
 
-  function key() {
-    var parts = [PREFIX];
-    for (var i = 0; i < arguments.length; i++) parts.push(arguments[i]);
-    return parts.join(".");
+  function storeKey(name) {
+    return PREFIX + "." + name;
   }
+
+  var KEY_THEME = storeKey("theme");
+  var KEY_SIDEBAR = storeKey("sidebar");
+  var KEY_ACTIVE_COURSE = storeKey("activeCourse");
+  var KEY_COURSES = storeKey("courses");
+
+  /** In-memory courses map; loaded once, written on course mutations. */
+  var coursesCache = null;
+
+  /* ---------- raw I/O ---------- */
 
   function readRaw(name) {
     try {
@@ -31,6 +50,14 @@
     }
   }
 
+  function removeRaw(name) {
+    try {
+      localStorage.removeItem(name);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
   function readJson(name, fallback) {
     var raw = readRaw(name);
     if (raw == null) return fallback;
@@ -45,70 +72,170 @@
     return writeRaw(name, JSON.stringify(value));
   }
 
+  /* ---------- course record shape ---------- */
+
+  function emptyCourseRecord() {
+    return {
+      completedLessonIds: [],
+      lastLessonId: null,
+      openCategoryId: null,
+      playbackPositions: {},
+    };
+  }
+
+  function isPlainObject(value) {
+    return value != null && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function normalizePlaybackPositions(raw) {
+    if (!isPlainObject(raw)) return {};
+    var out = {};
+    Object.keys(raw).forEach(function (lessonId) {
+      var n = typeof raw[lessonId] === "number" ? raw[lessonId] : Number(raw[lessonId]);
+      if (isFinite(n) && n >= 3) out[lessonId] = Math.floor(n);
+    });
+    return out;
+  }
+
+  function normalizeCourseRecord(raw) {
+    var base = emptyCourseRecord();
+    if (!isPlainObject(raw)) return base;
+
+    var finished = raw.completedLessonIds;
+    base.completedLessonIds = Array.isArray(finished)
+      ? finished.filter(function (id) {
+          return typeof id === "string" && id;
+        })
+      : [];
+
+    var last = raw.lastLessonId;
+    base.lastLessonId = typeof last === "string" && last ? last : null;
+
+    var open = raw.openCategoryId;
+    base.openCategoryId = typeof open === "string" && open ? open : null;
+
+    base.playbackPositions = normalizePlaybackPositions(raw.playbackPositions);
+
+    return base;
+  }
+
+  function normalizeCoursesMap(parsed) {
+    var map = {};
+    if (!isPlainObject(parsed)) return map;
+    Object.keys(parsed).forEach(function (courseId) {
+      if (!courseId) return;
+      map[courseId] = normalizeCourseRecord(parsed[courseId]);
+    });
+    return map;
+  }
+
+  function ensureCourses() {
+    if (coursesCache) return coursesCache;
+    coursesCache = normalizeCoursesMap(readJson(KEY_COURSES, {}));
+    return coursesCache;
+  }
+
+  function persistCourses() {
+    if (!coursesCache) return false;
+    return writeJson(KEY_COURSES, coursesCache);
+  }
+
+  function ensureCourse(courseId) {
+    var map = ensureCourses();
+    if (!courseId) return emptyCourseRecord();
+    if (!map[courseId]) {
+      map[courseId] = emptyCourseRecord();
+    }
+    return map[courseId];
+  }
+
   /* ---------- global prefs ---------- */
 
   function loadTheme() {
-    var val = readRaw(key("theme"));
+    var val = readRaw(KEY_THEME);
     return val === "light" ? "light" : "dark";
   }
 
   function saveTheme(theme) {
-    writeRaw(key("theme"), theme === "light" ? "light" : "dark");
+    writeRaw(KEY_THEME, theme === "light" ? "light" : "dark");
   }
 
   function loadCurriculumOpen(defaultOpen) {
-    var val = readRaw(key("curriculumOpen"));
+    var val = readRaw(KEY_SIDEBAR);
     if (val === "0") return false;
     if (val === "1") return true;
     return defaultOpen;
   }
 
   function saveCurriculumOpen(isOpen) {
-    writeRaw(key("curriculumOpen"), isOpen ? "1" : "0");
+    writeRaw(KEY_SIDEBAR, isOpen ? "1" : "0");
   }
 
   function loadActiveCourseId() {
-    return readRaw(key("activeCourse"));
+    return readRaw(KEY_ACTIVE_COURSE) || null;
   }
 
   function saveActiveCourseId(courseId) {
-    if (courseId) writeRaw(key("activeCourse"), courseId);
+    // null/empty clears — used when returning to the course list so refresh stays there
+    if (courseId) writeRaw(KEY_ACTIVE_COURSE, String(courseId));
+    else removeRaw(KEY_ACTIVE_COURSE);
   }
 
   /* ---------- per-course progress ---------- */
 
   function loadFinishedIds(courseId) {
-    var parsed = readJson(key(courseId, "finished"), []);
-    return new Set(Array.isArray(parsed) ? parsed : []);
+    if (!courseId) return new Set();
+    var course = ensureCourses()[courseId];
+    var list =
+      course && Array.isArray(course.completedLessonIds)
+        ? course.completedLessonIds
+        : [];
+    return new Set(list);
   }
 
   function saveFinishedIds(courseId, finishedSet) {
-    writeJson(key(courseId, "finished"), Array.from(finishedSet));
+    if (!courseId) return;
+    var course = ensureCourse(courseId);
+    course.completedLessonIds = Array.from(finishedSet || []);
+    persistCourses();
   }
 
   function loadLastLessonId(courseId) {
-    return readRaw(key(courseId, "lastLesson"));
+    if (!courseId) return null;
+    var course = ensureCourses()[courseId];
+    return course && course.lastLessonId ? course.lastLessonId : null;
   }
 
   function saveLastLessonId(courseId, lessonId) {
-    if (lessonId) writeRaw(key(courseId, "lastLesson"), lessonId);
+    if (!courseId || !lessonId) return;
+    var course = ensureCourse(courseId);
+    course.lastLessonId = lessonId;
+    persistCourses();
   }
 
   function loadOpenCategoryId(courseId, validIds) {
-    var id = readRaw(key(courseId, "openCategory"));
-    if (id && validIds.has(id)) return id;
+    if (!courseId) return null;
+    var course = ensureCourses()[courseId];
+    var id = course && course.openCategoryId ? course.openCategoryId : null;
+    if (id && validIds && typeof validIds.has === "function" && validIds.has(id)) {
+      return id;
+    }
     return null;
   }
 
   function saveOpenCategoryId(courseId, categoryId) {
-    if (categoryId) writeRaw(key(courseId, "openCategory"), categoryId);
+    if (!courseId || !categoryId) return;
+    var course = ensureCourse(courseId);
+    course.openCategoryId = categoryId;
+    persistCourses();
   }
 
   /** Map of lessonId → last playback position in seconds. */
   function loadLessonTimes(courseId) {
-    var parsed = readJson(key(courseId, "lessonTimes"), {});
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? parsed
+    if (!courseId) return {};
+    var course = ensureCourses()[courseId];
+    return course && isPlainObject(course.playbackPositions)
+      ? Object.assign({}, course.playbackPositions)
       : {};
   }
 
@@ -124,17 +251,55 @@
     if (!courseId || !lessonId) return;
     var t = Math.floor(Number(seconds) || 0);
     if (t < 0) t = 0;
-    var map = loadLessonTimes(courseId);
+
+    var course = ensureCourse(courseId);
+    var map = course.playbackPositions;
+    if (!isPlainObject(map)) {
+      map = {};
+      course.playbackPositions = map;
+    }
+
     if (t < 3) {
       // Near the start — drop the key so we don't resume at 0–2s
       if (map[lessonId] != null) {
         delete map[lessonId];
-        writeJson(key(courseId, "lessonTimes"), map);
+        persistCourses();
       }
       return;
     }
+
     map[lessonId] = t;
-    writeJson(key(courseId, "lessonTimes"), map);
+    persistCourses();
+  }
+
+  /**
+   * Drop progress for courses no longer registered.
+   * @param {string[]|Set<string>} validIds
+   */
+  function pruneCourses(validIds) {
+    var map = ensureCourses();
+    var valid = new Set();
+
+    if (validIds && typeof validIds.forEach === "function") {
+      validIds.forEach(function (id) {
+        if (id) valid.add(String(id));
+      });
+    }
+
+    var changed = false;
+    Object.keys(map).forEach(function (courseId) {
+      if (!valid.has(courseId)) {
+        delete map[courseId];
+        changed = true;
+      }
+    });
+
+    if (changed) persistCourses();
+
+    var active = loadActiveCourseId();
+    if (active && !valid.has(active)) {
+      saveActiveCourseId(null);
+    }
   }
 
   ns.Storage = {
@@ -153,5 +318,6 @@
     loadLessonTimes: loadLessonTimes,
     loadLessonTime: loadLessonTime,
     saveLessonTime: saveLessonTime,
+    pruneCourses: pruneCourses,
   };
 })(window);

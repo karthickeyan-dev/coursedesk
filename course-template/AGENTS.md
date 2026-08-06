@@ -244,7 +244,7 @@ ls courses/<id>/videos | sort
 
 1. Do **not** recreate the id/folder unless the user wants a new course.
 2. Add new videos to `videos/`, extend `lessons[]` and categories as needed.
-3. Keep existing lesson `id`s stable (progress is stored by lesson id in `localStorage`).
+3. Keep existing lesson `id`s stable (progress is stored by lesson id under `coursedesk.courses` in localStorage; removing a course from the registry prunes its progress).
 4. Only renumber display `num` / titles if the user asks; avoid changing ids.
 
 ---
