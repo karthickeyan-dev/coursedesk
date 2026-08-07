@@ -5,11 +5,11 @@ Tracked starter package for CourseDesk. **Copy** this folder into `courses/<cour
 | File | Purpose |
 |------|---------|
 | `AGENTS.md` | Full AI/human guide: how to structure courses from raw videos & assets |
-| `course.js` | Curriculum schema sample |
+| `course.js` | Curriculum schema sample (title, author, lessons, resources) |
 | `notes.js` | Optional Markdown notes sample |
-| `catalog.entry.js` | Snippet for `courses/catalog.js` |
-| `index.scripts.html` | Snippet for `index.html` script tags |
 | `videos/` | Placeholder for lecture media |
 | `assets/` | Placeholder for images, PDFs, downloads |
 
 Real courses live under `../courses/` (gitignored). See `AGENTS.md` for the packaging workflow.
+
+**No registration step:** with `pnpm start`, the player loads every `courses/<id>/course.js` automatically. Do not edit `index.html` for new courses.

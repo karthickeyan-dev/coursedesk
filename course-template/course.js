@@ -5,12 +5,13 @@
  * Then rename keys/ids from "example-course" to your real course id.
  * See course-template/AGENTS.md for the full packaging guide.
  *
- * Layout of a finished course package (all under courses/<id>/):
- *   course.js     required  metadata + curriculum
+ * Self-contained package (all under courses/<id>/):
+ *   course.js     required  metadata + curriculum (+ library card text)
  *   notes.js      optional  markdown notes keyed by lesson id
  *   videos/       optional  lecture video files
  *   assets/       optional  images, pdfs, downloads, etc.
  *
+ * No app registration — drop the folder under courses/ and refresh.
  * Paths in this file are relative to the course folder root.
  * The player resolves them to: courses/<id>/<path>
  *

@@ -8,10 +8,13 @@ When the user drops in videos, notes, or assets and asks you to “add a course�
 
 ## Goals
 
-1. Produce a self-contained package at `courses/<course-id>/`.
-2. Wire it into the library via `courses/catalog.js` and `index.html`.
+1. Produce a **self-contained** package at `courses/<course-id>/`.
+2. Put **all** course metadata inside that folder (`course.js` / optional `notes.js`).
 3. Never invent video filenames — use the files that actually exist on disk.
 4. Keep large media out of git (`courses/` is ignored).
+5. Do **not** edit `index.html`, player code, or any shared catalog to register the course.
+
+The player discovers packages automatically: any folder under `courses/` that contains `course.js` is listed via Vite (`pnpm start`).
 
 ---
 
@@ -42,8 +45,8 @@ Copy structure from `course-template/` (this directory). Do **not** edit the tem
 | Category `id` | kebab-case | `getting-started` |
 | `video` path | Relative to course folder | `videos/001-welcome.mp4` |
 
-- `course.id`, folder name, `COURSES` key, `COURSE_NOTES` key, and catalog `id` **must all match**.
-- `course.root` should be `"courses/<course-id>"` when set.
+- `course.id`, folder name, `COURSES` key, and `COURSE_NOTES` key **must all match**.
+- `course.root` should be `"courses/<course-id>"` when set (the loader also sets this).
 
 ---
 
@@ -72,7 +75,7 @@ If the user only supplies videos, derive the curriculum from filenames and optio
 
 - From the course title: `"React Native 2026"` → `react-native-2026`
 - Or reuse an existing folder name if updating a course
-- Confirm it does not collide with another entry in `courses/catalog.js`
+- Confirm it does not collide with another folder under `courses/`
 
 ### 3. Create the package folder
 
@@ -111,7 +114,7 @@ Create `categories[]` with stable ids and human titles. Assign every lesson a `c
 Start from `course-template/course.js`. Replace:
 
 - `"example-course"` → your id (folder key, `id`, `root`)
-- `title`, `author`, `description`
+- `title`, `author`, `description` (library card uses these)
 - `categories` and `lessons`
 
 Each lesson:
@@ -173,69 +176,31 @@ Start from `course-template/notes.js`.
 - Nested keys = lesson ids
 - Values = Markdown strings
 
-If there are no notes, **delete** `notes.js` and do not load it from `index.html`.
+If there are no notes, **delete** `notes.js` (do not leave an empty stub).
 
-### 7. Register the course
+### 7. No app registration
 
-**A. `courses/catalog.js`**
+You do **not** edit `index.html` or maintain a shared catalog.
 
-Ensure the file exists (create from the snippet below if missing). Append a catalog entry:
-
-```js
-(function (global) {
-  "use strict";
-
-  global.COURSE_CATALOG = [
-    {
-      id: "react-native-2026",
-      title: "React Native Course 2026",
-      author: "CodeWithBeto",
-      description: "…",
-    },
-    {
-      id: "<course-id>",
-      title: "<Title>",
-      author: "<Author>",
-      description: "<Short blurb>",
-    },
-  ];
-})(window);
-```
-
-See also `catalog.entry.js` in this folder.
-
-**B. `index.html`**
-
-Add script tags **before** the module entry point (`js/main.js`), after other courses:
-
-```html
-<script src="courses/<course-id>/course.js"></script>
-<script src="courses/<course-id>/notes.js"></script>  <!-- only if present -->
-<script src="courses/catalog.js"></script>
-```
-
-`catalog.js` must load **after** all `course.js` / `notes.js` files (or at least after the courses it lists are registered — order among course packages is free; catalog last is safest). All course scripts must appear before the `<script type="module" src="js/main.js">` tag.
-
-Snippet reference: `index.scripts.html`.
+- Normal use: **`pnpm start`** (Vite plugin serves a live manifest).
 
 ### 8. Verify
 
 Checklist:
 
 - [ ] `courses/<id>/course.js` registers `COURSES["<id>"]`
-- [ ] Folder name === `id` === catalog entry `id`
+- [ ] Folder name === `id` === `COURSES` key
 - [ ] Every `lesson.video` file exists
 - [ ] Every `lesson.categoryId` exists in `categories`
 - [ ] Lesson ids unique; notes keys only use real lesson ids
-- [ ] `index.html` loads `course.js` (+ `notes.js` if any) and `catalog.js`
-- [ ] Library card appears; opening a lesson plays video / shows notes
+- [ ] Library card appears after refresh; opening a lesson plays video / shows notes
 - [ ] No large media committed (confirm `courses/` is gitignored)
 
 Quick static check:
 
 ```bash
-# list videos referenced vs on disk (example with node/python as needed)
 ls courses/<id>/videos | sort
+ls courses/   # package folders appear automatically in the player
 ```
 
 ---
@@ -254,14 +219,16 @@ ls courses/<id>/videos | sort
 - Do not put real videos inside `course-template/`.
 - Do not commit `courses/**` media (folder is gitignored).
 - Do not hand-author fake durations or missing video paths.
-- Do not load `notes.js` if the file was not created.
+- Do not leave an empty `notes.js` if there are no notes — omit the file.
 - Do not change player/app code unless the course format itself is insufficient.
+- Do not add course-specific script tags to `index.html`.
+- Do not maintain a shared catalog of titles/authors outside the package.
 
 ---
 
 ## Player path resolution (reference)
 
-From `js/state.js`:
+From `js/state.js` / `js/course-loader.js`:
 
 - Prefer `course.data.root` (e.g. `courses/my-course`)
 - Else `courses/<id>`
@@ -271,29 +238,13 @@ Assets linked from notes markdown should use paths the browser can resolve (typi
 
 ---
 
-## Minimal empty catalog
-
-If `courses/catalog.js` is missing after a fresh clone, create:
-
-```js
-(function (global) {
-  "use strict";
-  global.COURSE_CATALOG = [
-    // { id: "my-course", title: "…", author: "…", description: "…" },
-  ];
-})(window);
-```
-
-Then add packages under `courses/` as above.
-
----
-
 ## Summary for agents
 
 ```text
 User media → courses/<id>/{videos,assets}/
 Template   → course-template/*  (copy, don't overwrite as live course)
-Metadata   → courses/<id>/course.js  (+ notes.js)
-Register   → courses/catalog.js + index.html <script> tags
+Metadata   → courses/<id>/course.js  (+ notes.js)  ONLY
+Discovery  → automatic (pnpm start / Vite courses plugin)
 Ignore     → entire courses/ tree in git
+Never      → course details in index.html or shared catalog
 ```

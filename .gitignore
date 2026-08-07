@@ -3,6 +3,13 @@
 courses/*
 !courses/.gitkeep
 
+# Node / Vite (pnpm)
+node_modules/
+dist/
+.vite/
+package-lock.json
+yarn.lock
+
 # OS / editor
 .DS_Store
 **/.DS_Store

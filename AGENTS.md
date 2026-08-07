@@ -1,24 +1,30 @@
-# CourseDesk — notes for AI agents
+# CourseDesk — agent notes
 
-## Repo layout
+## Stack
 
-| Path | Tracked? | Role |
-|------|----------|------|
-| `index.html`, `css/`, `js/`, `fonts/` | yes | CourseDesk player app (ES modules in `js/`) |
-| `course-template/` | yes | Starter package + packaging guide |
-| `courses/` | **no** (gitignored) | Local course content: videos, notes, catalog |
+- Vite + TypeScript, **pnpm**
+- UI: vanilla TS (do not change layout/CSS without being asked)
+- Packages: `marked`, `highlight.js`, `lucide`, `sirv`
 
-## Adding or structuring a course
+## Run
 
-When the user uploads videos/assets or asks to set up a course:
+```bash
+pnpm install
+pnpm start
+```
 
-1. Read **`course-template/AGENTS.md`** (authoritative packaging guide).
-2. Copy the template into `courses/<course-id>/` (never turn the template into the live course).
-3. Place media under `videos/` and `assets/`, write `course.js` (+ optional `notes.js`).
-4. Register in `courses/catalog.js` and load scripts from `index.html`.
+## Layout
 
-## Do not
+| Path | Role |
+|------|------|
+| `src/` | Player app (course-agnostic) |
+| `plugins/vite-plugin-courses.ts` | Live `/courses/manifest.json` + static media |
+| `course-template/` | Package contract |
+| `courses/` | Gitignored local packages |
 
-- Commit large media under `courses/`
-- Overwrite `course-template/` with production content
-- Change lesson `id`s on existing courses without being asked (progress is keyed by id)
+## Rules
+
+- All course details live in `courses/<id>/` only
+- Never hardcode course ids in app source
+- Keep lesson `id`s stable (progress keys)
+- Do not open via `file://`

@@ -4,9 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CourseDesk</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="css/styles.css" />
-  <link rel="stylesheet" href="css/hljs-dark.css" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
   <div class="app">
@@ -193,37 +191,12 @@
     </div>
   </div>
 
-  <!-- Vendors -->
-  <script src="js/vendor/marked.min.js"></script>
-  <script src="js/vendor/highlight.min.js"></script>
-
-  <!-- App Scripts -->
-  <script src="js/storage.js"></script>
-  <script src="js/icons.js"></script>
-  <script src="js/notes.js"></script>
-  <script src="js/player.js"></script>
-  <script src="js/state.js"></script>
-  <script src="js/ui/curriculum.js"></script>
-  <script src="js/ui/lesson-view.js"></script>
-  <script src="js/ui/course-picker.js"></script>
-
   <!--
-    Local course packages (gitignored): courses/<id>/
-      course.js  notes.js (optional)  videos/  assets/
-      course.resources[] → Files tab in the course sidebar
-    Template + AI packaging guide: course-template/ (see AGENTS.md there)
-    Load each course.js (+ notes.js if present), then catalog.js last.
+    CourseDesk (Vite + TypeScript)
+    Run: pnpm start
+    Packages: courses/<id>/  (auto-discovered; do not open this file via file://)
   -->
-  <script src="courses/react-native-2026/course.js"></script>
-  <script src="courses/react-native-2026/notes.js"></script>
-  <script src="courses/figma-essentials/course.js"></script>
-  <script src="courses/figma-essentials/notes.js"></script>
-  <script src="courses/figma-advanced/course.js"></script>
-  <script src="courses/figma-advanced/notes.js"></script>
-  <script src="courses/galaxies.dev-launch-your-first-app/course.js"></script>
-  <script src="courses/catalog.js"></script>
-
-  <!-- App Entry -->
-  <script src="js/main.js"></script>
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
+
