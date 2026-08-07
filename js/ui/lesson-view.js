@@ -37,8 +37,12 @@
     progressText: document.getElementById("progressText"),
     progressRing: document.getElementById("progressRing"),
     progressPill: document.getElementById("progressPill"),
-    progressLecturesStat: document.getElementById("progressLecturesStat"),
-    progressTimeStat: document.getElementById("progressTimeStat"),
+    progressLecturesTotal: document.getElementById("progressLecturesTotal"),
+    progressLecturesDone: document.getElementById("progressLecturesDone"),
+    progressLecturesLeft: document.getElementById("progressLecturesLeft"),
+    progressTimeTotal: document.getElementById("progressTimeTotal"),
+    progressTimeDone: document.getElementById("progressTimeDone"),
+    progressTimeLeft: document.getElementById("progressTimeLeft"),
   };
 
   /** Injected by main.js during init */
@@ -126,9 +130,11 @@
 
     var total = stats.total;
     var done = stats.done;
+    var remaining = Math.max(total - done, 0);
     var percent = total ? Math.round((done / total) * 100) : 0;
     var totalSeconds = stats.totalSeconds;
     var doneSeconds = stats.doneSeconds;
+    var remainingSeconds = Math.max(totalSeconds - doneSeconds, 0);
     var scopeLabel = stats.overall ? "Overall" : "";
 
     if (ui.progressText) {
@@ -139,14 +145,26 @@
     if (ui.progressRing) {
       ui.progressRing.setAttribute("stroke-dasharray", percent + ", 100");
     }
-    if (ui.progressLecturesStat) {
-      ui.progressLecturesStat.textContent = done + " / " + total;
+    if (ui.progressLecturesTotal) {
+      ui.progressLecturesTotal.textContent = String(total);
     }
-    if (ui.progressTimeStat) {
-      ui.progressTimeStat.textContent =
-        State.formatDurationTotal(doneSeconds) +
-        " / " +
+    if (ui.progressLecturesDone) {
+      ui.progressLecturesDone.textContent = String(done);
+    }
+    if (ui.progressLecturesLeft) {
+      ui.progressLecturesLeft.textContent = String(remaining);
+    }
+    if (ui.progressTimeTotal) {
+      ui.progressTimeTotal.textContent =
         State.formatDurationTotal(totalSeconds);
+    }
+    if (ui.progressTimeDone) {
+      ui.progressTimeDone.textContent =
+        State.formatDurationTotal(doneSeconds);
+    }
+    if (ui.progressTimeLeft) {
+      ui.progressTimeLeft.textContent =
+        State.formatDurationTotal(remainingSeconds);
     }
     if (ui.progressPill) {
       ui.progressPill.classList.toggle("is-empty", total === 0);
@@ -162,11 +180,15 @@
           done +
           " of " +
           total +
-          " lectures. " +
+          " lectures completed, " +
+          remaining +
+          " remaining. " +
           State.formatDurationTotal(doneSeconds) +
           " of " +
           State.formatDurationTotal(totalSeconds) +
-          " watched."
+          " watched, " +
+          State.formatDurationTotal(remainingSeconds) +
+          " remaining."
       );
     }
   }

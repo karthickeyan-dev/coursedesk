@@ -33,14 +33,54 @@
           </div>
           <span id="progressText">0% complete</span>
           <div class="progress-dropdown" id="progressDropdown" role="tooltip">
-            <div class="progress-dropdown-row">
-              <span class="progress-dropdown-label" id="progressLecturesLabel">Lectures completed</span>
-              <strong id="progressLecturesStat">0 / 0</strong>
-            </div>
-            <div class="progress-dropdown-row">
-              <span class="progress-dropdown-label" id="progressTimeLabel">Time completed</span>
-              <strong id="progressTimeStat">0m / 0m</strong>
-            </div>
+            <table class="progress-table">
+              <thead>
+                <tr>
+                  <th scope="col" class="progress-table-corner"></th>
+                  <th scope="col">
+                    <span class="progress-col-label">
+                      <svg class="progress-col-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 3 4 7.5 12 12l8-4.5L12 3Z"/>
+                        <path d="m4 12 8 4.5 8-4.5"/>
+                        <path d="m4 16.5 8 4.5 8-4.5"/>
+                      </svg>
+                      Total
+                    </span>
+                  </th>
+                  <th scope="col">
+                    <span class="progress-col-label">
+                      <svg class="progress-col-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5"/>
+                      </svg>
+                      Completed
+                    </span>
+                  </th>
+                  <th scope="col">
+                    <span class="progress-col-label">
+                      <svg class="progress-col-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                      </svg>
+                      Remaining
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Lectures</th>
+                  <td id="progressLecturesTotal">0</td>
+                  <td id="progressLecturesDone">0</td>
+                  <td id="progressLecturesLeft">0</td>
+                </tr>
+                <tr>
+                  <th scope="row">Time</th>
+                  <td id="progressTimeTotal">0m</td>
+                  <td id="progressTimeDone">0m</td>
+                  <td id="progressTimeLeft">0m</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
         <button type="button" class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme"></button>
@@ -180,6 +220,7 @@
   <script src="courses/figma-essentials/notes.js"></script>
   <script src="courses/figma-advanced/course.js"></script>
   <script src="courses/figma-advanced/notes.js"></script>
+  <script src="courses/galaxies.dev-launch-your-first-app/course.js"></script>
   <script src="courses/catalog.js"></script>
 
   <!-- App Entry -->
