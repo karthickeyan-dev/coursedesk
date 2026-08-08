@@ -211,3 +211,8 @@ export function pruneCourses(validIds: Iterable<string>): void {
   const active = loadActiveCourseId();
   if (active && !valid.has(active)) saveActiveCourseId(null);
 }
+
+/** Test helper — clears in-memory cache so localStorage is re-read. */
+export function resetStorageCache(): void {
+  cache = null;
+}

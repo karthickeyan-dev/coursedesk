@@ -1,12 +1,14 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
 import { courseDeskCourses } from "./plugins/vite-plugin-courses";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [courseDeskCourses()],
+  plugins: [react(), tailwindcss(), courseDeskCourses()],
   publicDir: "public",
   server: {
     port: 5173,
@@ -30,5 +32,9 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     sourcemap: true,
+  },
+  test: {
+    environment: "happy-dom",
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
   },
 });

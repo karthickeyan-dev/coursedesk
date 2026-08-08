@@ -875,6 +875,36 @@ a {
   min-width: 40px;
 }
 
+button.pc-duration {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #d1d7dc;
+  min-width: 44px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+button.pc-duration:hover {
+  background: transparent;
+  color: #d1d7dc;
+}
+
+button.pc-duration:focus {
+  outline: none;
+}
+
+button.pc-duration:focus-visible {
+  box-shadow: 0 0 0 2px rgba(164, 53, 240, 0.45);
+  border-radius: 4px;
+}
+
 .pc-seek {
   --seek-progress: 0%;
   flex: 1;
@@ -942,12 +972,12 @@ a {
   border: 0;
 }
 
-/* Mute + volume slider group */
+/* Mute + vertical volume flyout */
 .pc-volume {
+  position: relative;
   flex: none;
   display: flex;
   align-items: center;
-  gap: 4px;
   min-width: 0;
 }
 
@@ -955,17 +985,50 @@ a {
   flex: none;
 }
 
+.pc-volume-flyout {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  width: 40px;
+  height: 120px;
+  padding: 10px 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #1c1d1f;
+  border: 1px solid #3e4143;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  z-index: 5;
+  box-sizing: border-box;
+}
+
+/* Invisible hover bridge so the flyout stays open across the gap */
+.pc-volume-flyout::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 8px;
+}
+
+.pc-volume:hover .pc-volume-flyout,
+.pc-volume:focus-within .pc-volume-flyout {
+  display: flex;
+}
+
+/* Horizontal range rotated -90° → vertical (min bottom, max top) */
 .pc-volume-slider {
   --volume-progress: 100%;
-  width: 0;
-  min-width: 0;
-  max-width: 88px;
+  width: 88px;
   height: 5px;
   margin: 0;
   padding: 0;
-  opacity: 0;
   appearance: none;
   -webkit-appearance: none;
+  transform: rotate(-90deg);
   background: linear-gradient(
     to right,
     #fff 0%,
@@ -975,13 +1038,6 @@ a {
   );
   border-radius: 999px;
   cursor: pointer;
-  transition: width 0.15s ease, opacity 0.15s ease;
-}
-
-.pc-volume:hover .pc-volume-slider,
-.pc-volume:focus-within .pc-volume-slider {
-  width: 72px;
-  opacity: 1;
 }
 
 .pc-volume-slider:focus {
@@ -989,8 +1045,6 @@ a {
 }
 
 .pc-volume-slider:focus-visible {
-  width: 72px;
-  opacity: 1;
   box-shadow: 0 0 0 2px rgba(164, 53, 240, 0.45);
 }
 
@@ -1032,11 +1086,82 @@ a {
   border: 0;
 }
 
-@media (max-width: 720px) {
-  .pc-volume-slider {
-    width: 56px;
-    opacity: 1;
-  }
+/* Playback speed */
+.pc-speed {
+  position: relative;
+  flex: none;
+}
+
+.pc-speed-btn {
+  min-width: 40px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.pc-speed-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  min-width: 72px;
+  padding: 6px 0;
+  margin: 0;
+  display: none;
+  gap: 2px;
+  background: #1c1d1f;
+  border: 1px solid #3e4143;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  z-index: 6;
+}
+
+/* Invisible hover bridge so the menu stays open across the gap */
+.pc-speed-menu::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 8px;
+}
+
+.pc-speed:hover .pc-speed-menu,
+.pc-speed:focus-within .pc-speed-menu {
+  display: grid;
+}
+
+.pc-speed-option {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #d1d7dc;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  padding: 8px 14px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.pc-speed-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.pc-speed-option[aria-selected="true"] {
+  color: #fff;
+  background: rgba(164, 53, 240, 0.22);
+}
+
+.pc-speed-option:focus {
+  outline: none;
+}
+
+.pc-speed-option:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(164, 53, 240, 0.45);
 }
 
 .no-video {

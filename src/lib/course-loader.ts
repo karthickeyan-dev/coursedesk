@@ -1,6 +1,12 @@
+/**
+ * Live course discovery + classic script-tag loading (IIFE packages).
+ * Do not use import() for course.js — packages register on window.COURSES.
+ */
 import type { ManifestEntry } from "../types/course";
 
 const DIR = "courses";
+
+let loadPromise: Promise<string[]> | null = null;
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -51,8 +57,7 @@ function applyRoot(folderId: string): void {
   }
 }
 
-/** Discover packages via /courses/manifest.json and load course.js (+ notes.js). */
-export async function loadCourses(): Promise<string[]> {
+async function loadCoursesOnce(): Promise<string[]> {
   let entries: ManifestEntry[] = [];
   try {
     const res = await fetch(`${DIR}/manifest.json`, { cache: "no-store" });
@@ -85,4 +90,10 @@ export async function loadCourses(): Promise<string[]> {
     }
   }
   return loaded;
+}
+
+/** Discover packages via /courses/manifest.json and load course.js (+ notes.js). Strict Mode–safe. */
+export function loadCourses(): Promise<string[]> {
+  if (!loadPromise) loadPromise = loadCoursesOnce();
+  return loadPromise;
 }
