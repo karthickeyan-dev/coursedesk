@@ -40,7 +40,7 @@ export function CurriculumSidebar({ collapsed }: { collapsed?: boolean }) {
         "flex min-h-0 min-w-0 flex-col border-l border-border bg-elevated transition-opacity duration-150",
         collapsed
           ? "w-0 min-w-0 overflow-hidden border-0 opacity-0 pointer-events-none"
-          : "w-(--spacing-sidebar) max-[979px]:absolute max-[979px]:inset-y-0 max-[979px]:right-0 max-[979px]:z-30 max-[979px]:w-[min(400px,94vw)] max-[979px]:shadow-[-8px_0_24px_rgba(0,0,0,0.25)]",
+          : "w-(--spacing-sidebar) max-w-full max-[979px]:absolute max-[979px]:inset-y-0 max-[979px]:right-0 max-[979px]:z-30 max-[979px]:shadow-[-8px_0_24px_rgba(0,0,0,0.25)]",
       ].join(" ")}
       aria-label="Course sidebar"
       aria-hidden={collapsed}

@@ -34,7 +34,7 @@ export function Topbar() {
             aria-label="Back to all courses"
             onClick={showLibrary}
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={18} strokeWidth={2} />
           </button>
         )}
         <span
@@ -64,7 +64,11 @@ export function Topbar() {
           }
           onClick={toggleTheme}
         >
-          {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+          {theme === "light" ? (
+            <Moon size={18} strokeWidth={2} />
+          ) : (
+            <Sun size={18} strokeWidth={2} />
+          )}
         </button>
         {inCourse && (
           <button
@@ -75,7 +79,7 @@ export function Topbar() {
             aria-expanded={curriculumOpen}
             onClick={() => setCurriculumOpen(!curriculumOpen)}
           >
-            <List size={20} />
+            <List size={18} strokeWidth={2} />
           </button>
         )}
       </div>

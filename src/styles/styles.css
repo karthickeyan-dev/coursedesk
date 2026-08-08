@@ -32,7 +32,8 @@
   --radius-md: 8px;
   --shadow-card: var(--shadow);
   --shadow-pop: var(--shadow-lg);
-  --spacing-sidebar: 400px;
+  /* Fluid sidebar: narrow phones → tablets → desktop cap */
+  --spacing-sidebar: clamp(16.5rem, 32vw, 25rem);
   --spacing-topbar: 56px;
   --breakpoint-curriculum: 980px;
 }
@@ -89,6 +90,7 @@
   --ok-soft: rgba(25, 135, 84, 0.12);
   --danger: #dc3545;
   --check-border: #8a8f94;
+  --check-mark: #ffffff;
   --shadow: 0 2px 8px rgba(28, 29, 31, 0.08);
   --shadow-lg: 0 12px 28px rgba(28, 29, 31, 0.12);
   --lib-glow-1: rgba(164, 53, 240, 0.1);
@@ -273,30 +275,35 @@ button {
   border: 0;
 }
 
-/* Complete checkbox icon */
-.check-ico {
-  width: 16px;
-  height: 16px;
-  border: 2px solid currentColor;
-  border-radius: 2px;
-  display: inline-block;
-  position: relative;
+/* Curriculum sidebar completion rings — force SVG stroke visibility */
+.curriculum-check svg {
+  display: block;
   flex: none;
+  stroke: currentColor;
+  color: inherit;
 }
-.btn-complete.is-done .check-ico {
-  background: var(--ok);
-  border-color: var(--ok);
+.curriculum-check.is-done {
+  color: var(--check-mark);
 }
-.btn-complete.is-done .check-ico::after {
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 0;
-  width: 5px;
-  height: 9px;
-  border: solid var(--check-mark);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+.curriculum-check.is-partial {
+  color: var(--ok);
+}
+
+/* Sidebar width across breakpoints (overlay < 980px uses same token) */
+@media (max-width: 979px) {
+  :root {
+    --spacing-sidebar: min(22.5rem, 92vw);
+  }
+}
+@media (min-width: 980px) and (max-width: 1199px) {
+  :root {
+    --spacing-sidebar: clamp(16rem, 28vw, 20rem);
+  }
+}
+@media (min-width: 1200px) {
+  :root {
+    --spacing-sidebar: clamp(18rem, 26vw, 25rem);
+  }
 }
 
 /* Notes markdown prose (injected HTML) */

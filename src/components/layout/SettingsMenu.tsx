@@ -83,7 +83,7 @@ export function SettingsMenu() {
           setMessage(null);
         }}
       >
-        <Settings size={18} />
+        <Settings size={18} strokeWidth={2} />
       </button>
       {open ? (
         <div

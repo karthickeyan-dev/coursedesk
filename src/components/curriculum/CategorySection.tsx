@@ -7,7 +7,7 @@ import { useAppStore } from "../../store/useAppStore";
 import { LessonButton } from "./LessonButton";
 
 const checkBase =
-  "mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 border-[var(--check-border)] bg-transparent text-transparent transition-[border-color,background,color] duration-100";
+  "curriculum-check mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 border-[var(--check-border)] bg-transparent transition-[border-color,background-color,color] duration-100";
 
 export function CategorySection({
   category,
@@ -46,10 +46,10 @@ export function CategorySection({
           className={[
             checkBase,
             allDone
-              ? "border-ok bg-ok text-[var(--check-mark)]"
+              ? "is-done border-ok bg-ok text-white"
               : someDone
-                ? "border-ok bg-[color-mix(in_srgb,var(--ok)_22%,var(--panel-2))] text-ok"
-                : "hover:border-[color-mix(in_srgb,var(--check-border)_45%,var(--text))]",
+                ? "is-partial border-ok bg-[color-mix(in_srgb,var(--ok)_22%,var(--panel-2))] text-ok"
+                : "text-transparent hover:border-[color-mix(in_srgb,var(--check-border)_45%,var(--text))]",
           ].join(" ")}
           role="checkbox"
           aria-checked={allDone ? "true" : someDone ? "mixed" : "false"}
@@ -59,7 +59,16 @@ export function CategorySection({
             toggleSectionFinished(lessons.map((l) => l.id));
           }}
         >
-          <Check size={10} className="block" />
+          {allDone || someDone ? (
+            <Check
+              size={12}
+              strokeWidth={3}
+              absoluteStrokeWidth
+              className="block"
+              color="currentColor"
+              aria-hidden
+            />
+          ) : null}
         </span>
         <span className="flex min-w-0 flex-col gap-1">
           <span className="text-sm leading-snug font-bold">
@@ -72,10 +81,12 @@ export function CategorySection({
         <span className="mt-0.5 grid place-items-center">
           <ChevronRight
             size={16}
+            strokeWidth={2}
             className={[
-              "text-muted-2 transition-transform duration-150",
+              "block text-muted-2 transition-transform duration-150",
               isOpen ? "rotate-90" : "",
             ].join(" ")}
+            aria-hidden
           />
         </span>
       </button>

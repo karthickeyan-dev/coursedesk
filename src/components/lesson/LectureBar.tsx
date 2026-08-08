@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { categoryTitle } from "../../lib/assets";
 import { isLessonFinished } from "../../store/selectors";
 import { useAppStore } from "../../store/useAppStore";
@@ -23,9 +24,9 @@ export function LectureBar() {
     : false;
 
   return (
-    <section className="w-full border-b border-border bg-elevated px-6 py-[18px]">
+    <section className="w-full border-b border-border bg-elevated px-4 py-[18px] sm:px-6">
       <div className="m-0 flex w-full items-start justify-between gap-4 max-[979px]:flex-col">
-        <div>
+        <div className="min-w-0">
           <div className="mb-1 text-xs font-bold tracking-[0.04em] text-muted-2 uppercase">
             {lesson ? categoryTitle(lesson, categories) : "Section"}
           </div>
@@ -54,15 +55,33 @@ export function LectureBar() {
             type="button"
             className={[
               btn,
-              "btn-complete min-w-40 justify-center max-[560px]:flex-1",
+              "min-w-40 justify-center max-[560px]:flex-1",
               done
-                ? "is-done border-ok bg-ok-soft text-ok"
-                : "border-text bg-transparent text-text",
+                ? "border-ok bg-ok-soft text-ok"
+                : "border-text bg-transparent text-text hover:bg-text/6",
             ].join(" ")}
             disabled={!activeLessonId}
             onClick={markActiveComplete}
           >
-            <span className="check-ico" aria-hidden="true" />
+            <span
+              className={[
+                "grid h-4 w-4 shrink-0 place-items-center rounded-sm border-2",
+                done
+                  ? "border-ok bg-ok text-[var(--check-mark)]"
+                  : "border-current bg-transparent",
+              ].join(" ")}
+              aria-hidden="true"
+            >
+              {done ? (
+                <Check
+                  size={10}
+                  strokeWidth={3}
+                  absoluteStrokeWidth
+                  color="currentColor"
+                  className="block"
+                />
+              ) : null}
+            </span>
             <span>{done ? "Completed" : "Mark as complete"}</span>
           </button>
         </div>

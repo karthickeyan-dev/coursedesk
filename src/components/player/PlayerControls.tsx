@@ -1,5 +1,6 @@
 import {
   Maximize,
+  Minimize,
   Pause,
   Play,
   Volume1,
@@ -17,8 +18,16 @@ interface Props {
   api: UseVideoPlayerApi;
 }
 
+/** Shared control-button chrome — keeps every icon hit-target aligned. */
 const pcBtn =
-  "grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent text-inherit hover:bg-white/8";
+  "grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-[#f7f9fa] transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(164,53,240,0.55)]";
+
+const iconProps = {
+  size: 20 as const,
+  strokeWidth: 2 as const,
+  className: "block",
+  "aria-hidden": true as const,
+};
 
 export function PlayerControls({ ui, api }: Props) {
   if (!ui.hasSrc) return null;
@@ -33,8 +42,15 @@ export function PlayerControls({ ui, api }: Props) {
     return api.formatTime(ui.duration);
   })();
 
+  const VolumeIcon =
+    ui.muted || ui.volume === 0
+      ? VolumeX
+      : ui.volume <= 0.5
+        ? Volume1
+        : Volume2;
+
   return (
-    <div className="player-controls box-border flex w-full shrink-0 items-center gap-2.5 border-t border-[#2a2a2a] bg-[#141414] px-3.5 py-2.5 text-[#f7f9fa]">
+    <div className="player-controls box-border flex w-full shrink-0 items-center gap-1.5 border-t border-[#2a2a2a] bg-[#141414] px-2.5 py-2 text-[#f7f9fa] sm:gap-2.5 sm:px-3.5 sm:py-2.5">
       <button
         type="button"
         className={pcBtn}
@@ -42,9 +58,9 @@ export function PlayerControls({ ui, api }: Props) {
         onClick={() => api.togglePlayPause(false)}
       >
         {ui.playing ? (
-          <Pause size={18} fill="currentColor" />
+          <Pause {...iconProps} fill="currentColor" />
         ) : (
-          <Play size={18} fill="currentColor" />
+          <Play {...iconProps} fill="currentColor" />
         )}
       </button>
 
@@ -66,7 +82,7 @@ export function PlayerControls({ ui, api }: Props) {
 
       <button
         type="button"
-        className="m-0 min-w-11 shrink-0 cursor-pointer appearance-none border-0 bg-transparent p-0 text-left text-xs text-[#d1d7dc] tabular-nums hover:bg-transparent focus:outline-none focus-visible:rounded-sm focus-visible:shadow-[0_0_0_2px_rgba(164,53,240,0.45)]"
+        className="m-0 min-w-11 shrink-0 cursor-pointer appearance-none rounded-sm border-0 bg-transparent p-0 text-left text-xs text-[#d1d7dc] tabular-nums hover:text-white focus:outline-none focus-visible:rounded-sm focus-visible:shadow-[0_0_0_2px_rgba(164,53,240,0.45)]"
         aria-label={
           ui.showRemaining ? "Show total duration" : "Show remaining time"
         }
@@ -101,13 +117,7 @@ export function PlayerControls({ ui, api }: Props) {
           aria-label={ui.muted ? "Unmute" : "Mute"}
           onClick={() => api.toggleMute(false)}
         >
-          {ui.muted || ui.volume === 0 ? (
-            <VolumeX size={18} fill="currentColor" />
-          ) : ui.volume <= 0.5 ? (
-            <Volume1 size={18} fill="currentColor" />
-          ) : (
-            <Volume2 size={18} fill="currentColor" />
-          )}
+          <VolumeIcon {...iconProps} />
         </button>
       </div>
 
@@ -154,7 +164,11 @@ export function PlayerControls({ ui, api }: Props) {
         title={ui.fullscreen ? "Exit fullscreen" : "Fullscreen"}
         onClick={() => api.toggleFullscreen(false)}
       >
-        <Maximize size={18} />
+        {ui.fullscreen ? (
+          <Minimize {...iconProps} />
+        ) : (
+          <Maximize {...iconProps} />
+        )}
       </button>
     </div>
   );

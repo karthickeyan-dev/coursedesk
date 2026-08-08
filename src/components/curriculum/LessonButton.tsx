@@ -34,18 +34,29 @@ export function LessonButton({ lesson }: { lesson: Lesson }) {
     >
       <span
         className={[
-          "mt-px grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 transition-[border-color,background,color] duration-100",
+          "curriculum-check mt-px grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 transition-[border-color,background-color,color] duration-100",
           done
-            ? "border-ok bg-ok text-[var(--check-mark)]"
+            ? "is-done border-ok bg-ok text-white"
             : "border-[var(--check-border)] bg-transparent text-transparent hover:border-[color-mix(in_srgb,var(--check-border)_45%,var(--text))]",
         ].join(" ")}
+        role="checkbox"
+        aria-checked={done}
         title={done ? "Completed" : "Mark complete"}
         onClick={(e) => {
           e.stopPropagation();
           toggleFinished(lesson.id);
         }}
       >
-        <Check size={10} className="block" />
+        {done ? (
+          <Check
+            size={12}
+            strokeWidth={3}
+            absoluteStrokeWidth
+            className="block"
+            color="currentColor"
+            aria-hidden
+          />
+        ) : null}
       </span>
       <span className="min-w-0">
         <span

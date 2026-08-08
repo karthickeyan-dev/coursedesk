@@ -29,10 +29,17 @@ const ICONS: Record<HudKey, typeof Play> = {
   jump: Gauge,
 };
 
+/** Media glyphs that read better solid; match PlayerControls. */
+const FILLED: Partial<Record<HudKey, boolean>> = {
+  play: true,
+  pause: true,
+};
+
 export function PlayerHud({ hud }: { hud: HudState }) {
   const Icon = ICONS[hud.key] ?? Play;
   const meter = hud.meter;
   const showMeter = meter != null && Number.isFinite(meter);
+  const filled = Boolean(FILLED[hud.key]);
 
   return (
     <div
@@ -48,8 +55,14 @@ export function PlayerHud({ hud }: { hud: HudState }) {
           hud.visible ? "scale-100" : "scale-[0.94]",
         ].join(" ")}
       >
-        <div className="grid h-9 w-9 place-items-center text-white">
-          <Icon size={36} strokeWidth={2} className="block" />
+        <div className="grid h-10 w-10 place-items-center text-white">
+          <Icon
+            size={32}
+            strokeWidth={2}
+            className="block"
+            fill={filled ? "currentColor" : "none"}
+            aria-hidden
+          />
         </div>
         <div className="text-center text-[13px] font-semibold tracking-wide whitespace-nowrap text-[#f7f9fa]">
           {hud.label}
