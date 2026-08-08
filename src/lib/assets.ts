@@ -2,7 +2,7 @@ import type { AvailableCourse, CourseNotesMap, Lesson } from "../types/course";
 import { hasNotes } from "./notes";
 import { resolveLocalAssetUrl } from "./local-courses";
 
-/** Resolve video / file paths to a playable or downloadable URL (blob: for local files). */
+/** Resolve video / file paths to a playable or viewable URL (blob: for local files). */
 export async function resolveCourseAssetUrl(
   course: AvailableCourse | null,
   assetPath: string | undefined | null

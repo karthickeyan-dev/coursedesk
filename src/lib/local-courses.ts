@@ -402,6 +402,53 @@ async function resolveFileInCourse(
   }
 }
 
+/** MIME for common course assets so the browser can view (not force-download). */
+function mimeFromPath(path: string): string | null {
+  const ext = path.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase();
+  if (!ext) return null;
+  const map: Record<string, string> = {
+    pdf: "application/pdf",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+    svg: "image/svg+xml",
+    bmp: "image/bmp",
+    ico: "image/x-icon",
+    txt: "text/plain",
+    md: "text/markdown;charset=utf-8",
+    markdown: "text/markdown;charset=utf-8",
+    html: "text/html;charset=utf-8",
+    htm: "text/html;charset=utf-8",
+    css: "text/css;charset=utf-8",
+    js: "text/javascript;charset=utf-8",
+    mjs: "text/javascript;charset=utf-8",
+    json: "application/json",
+    xml: "application/xml",
+    csv: "text/csv;charset=utf-8",
+    vtt: "text/vtt",
+    srt: "application/x-subrip",
+    mp4: "video/mp4",
+    webm: "video/webm",
+    ogv: "video/ogg",
+    mov: "video/quicktime",
+    mp3: "audio/mpeg",
+    wav: "audio/wav",
+    ogg: "audio/ogg",
+    m4a: "audio/mp4",
+  };
+  return map[ext] ?? null;
+}
+
+/** Blob/File with a viewable type when the FS handle left type empty. */
+function asViewableBlob(file: File, relPath: string): Blob {
+  if (file.type && file.type !== "application/octet-stream") return file;
+  const mime = mimeFromPath(relPath);
+  if (!mime || mime === file.type) return file;
+  return new Blob([file], { type: mime });
+}
+
 /** Resolve a course-relative path to a blob: URL (cached). */
 export async function resolveLocalAssetUrl(
   courseId: string,
@@ -430,7 +477,8 @@ export async function resolveLocalAssetUrl(
 
   const file = await resolveFileInCourse(courseId, rel);
   if (!file) return null;
-  const url = URL.createObjectURL(file);
+  // Prefer correct MIME so PDFs/images/text open in a tab instead of downloading.
+  const url = URL.createObjectURL(asViewableBlob(file, rel));
   blobCache.set(key, url);
   return url;
 }

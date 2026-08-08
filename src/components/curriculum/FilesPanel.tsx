@@ -79,7 +79,7 @@ export function FilesPanel() {
     return (
       <div className="w-full p-4">
         <p className="m-0 text-[13px] text-muted-2 italic">
-          No downloadable files for this course.
+          No files for this course.
         </p>
       </div>
     );
@@ -189,7 +189,7 @@ export function FilesPanel() {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    download={item.title || undefined}
+                    title={`Open ${item.title || item.path}`}
                   >
                     {body}
                   </a>
