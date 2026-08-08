@@ -1,9 +1,9 @@
 import { Check } from "lucide-react";
-import { formatDurationTotal, formatLessonTime } from "../../lib/format";
 import {
   lectureTypeLabel,
   lessonDurationSeconds,
 } from "../../lib/assets";
+import { formatDurationTotal, formatLessonTime } from "../../lib/format";
 import type { Lesson } from "../../types/course";
 import { isLessonFinished } from "../../store/selectors";
 import { useAppStore } from "../../store/useAppStore";
@@ -23,29 +23,52 @@ export function LessonButton({ lesson }: { lesson: Lesson }) {
   return (
     <button
       type="button"
-      className={`lesson-btn${active ? " active" : ""}${done ? " done" : ""}`}
-      data-id={lesson.id}
+      className={[
+        "grid w-full grid-cols-[22px_1fr_auto] items-start gap-2.5 border-0 border-l-[3px] bg-transparent py-3 pr-4 pl-3.5 text-left text-text",
+        active
+          ? "border-l-accent bg-accent-soft"
+          : "border-l-transparent hover:bg-text/4",
+      ].join(" ")}
+      data-lesson-id={lesson.id}
       onClick={() => selectLesson(lesson.id)}
     >
       <span
-        className="check"
+        className={[
+          "mt-px grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 transition-[border-color,background,color] duration-100",
+          done
+            ? "border-ok bg-ok text-[var(--check-mark)]"
+            : "border-[var(--check-border)] bg-transparent text-transparent hover:border-[color-mix(in_srgb,var(--check-border)_45%,var(--text))]",
+        ].join(" ")}
         title={done ? "Completed" : "Mark complete"}
         onClick={(e) => {
           e.stopPropagation();
           toggleFinished(lesson.id);
         }}
       >
-        <Check size={10} />
+        <Check size={10} className="block" />
       </span>
-      <span className="title-wrap">
-        <span className="title">{lesson.title}</span>
-        <span className="lesson-meta">
+      <span className="min-w-0">
+        <span
+          className={[
+            "block text-[13.5px] leading-snug font-medium",
+            done ? "text-muted" : "",
+          ].join(" ")}
+        >
+          {lesson.title}
+        </span>
+        <span className="mt-0.5 block text-xs text-muted-2">
           {lectureTypeLabel(lesson, notesByLessonId)}
         </span>
       </span>
       {timeLabel ? (
         <span
-          className="lesson-duration"
+          className={[
+            "mt-px whitespace-nowrap text-xs font-semibold tracking-wide tabular-nums",
+            active
+              ? "text-[color-mix(in_srgb,var(--accent)_70%,var(--muted-2))]"
+              : "text-muted-2",
+            done ? "opacity-85" : "",
+          ].join(" ")}
           title={formatDurationTotal(seconds)}
         >
           {timeLabel}

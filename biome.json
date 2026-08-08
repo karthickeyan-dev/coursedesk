@@ -18,14 +18,14 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
-      "a11y": "off",
-      "correctness": {
-        "useExhaustiveDependencies": "off"
-      },
-      "style": {
-        "noDescendingSpecificity": "off",
-        "noNonNullAssertion": "off"
-      }
+      "a11y": "off"
+    }
+  },
+  "css": {
+    "parser": {
+      "cssModules": false,
+      "allowWrongLineComments": true,
+      "tailwindDirectives": true
     }
   },
   "javascript": {

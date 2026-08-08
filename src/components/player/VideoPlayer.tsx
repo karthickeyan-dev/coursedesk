@@ -28,7 +28,7 @@ export function VideoPlayer() {
     return () => {
       cancelled = true;
     };
-  }, [activeCourse, videoPath, activeLessonId]);
+  }, [activeCourse, videoPath]);
 
   const api = useVideoPlayer({
     videoRef,
@@ -42,47 +42,52 @@ export function VideoPlayer() {
     },
   });
 
+  const { persistTimeNow, hideVideo, showVideo } = api;
   const prevLessonRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (prevLessonRef.current && prevLessonRef.current !== activeLessonId) {
-      api.persistTimeNow();
+      persistTimeNow();
     }
     prevLessonRef.current = activeLessonId;
 
     if (!src || !activeCourse || !activeLessonId) {
-      api.hideVideo();
+      hideVideo();
       return;
     }
 
     const startTime = Storage.loadLessonTime(activeCourse.data.id, activeLessonId);
-    api.showVideo(src, { startTime });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to lesson/src changes
-  }, [src, activeLessonId, activeCourse?.data.id]);
+    showVideo(src, { startTime });
+  }, [src, activeLessonId, activeCourse, persistTimeNow, hideVideo, showVideo]);
 
   if (!lesson) return null;
 
   if (!videoPath) {
     return (
-      <section className="player-stage hidden" aria-label="Lecture video" />
+      <section className="hidden w-full flex-col bg-black" aria-label="Lecture video" />
     );
   }
 
   if (!src) {
     return (
-      <section className="player-stage" aria-label="Lecture video">
-        <div className="player-wrap player-loading">
-          <p className="player-loading-text">Loading video…</p>
+      <section className="flex w-full flex-col bg-black" aria-label="Lecture video">
+        <div className="grid min-h-[200px] place-items-center bg-black text-[#d1d7dc]">
+          <p className="m-0 text-[0.9rem]">Loading video…</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="player-stage" ref={stageRef} aria-label="Lecture video">
-      <div className="player-wrap">
+    <section
+      className="player-stage flex w-full flex-col bg-black"
+      ref={stageRef}
+      aria-label="Lecture video"
+    >
+      <div className="player-wrap relative mx-auto grid aspect-video w-full max-w-[1200px] shrink-0 place-items-center bg-black">
         <video
           ref={videoRef}
+          className="block h-full w-full cursor-pointer bg-black object-contain"
           preload="metadata"
           playsInline
           onClick={() => api.togglePlayPause(false)}
@@ -98,7 +103,6 @@ export function VideoPlayer() {
   );
 }
 
-/** Expose active video check for app hotkeys (F = complete when no video). */
 export function useHasActiveVideo(): boolean {
   const activeLessonId = useAppStore((s) => s.activeLessonId);
   const lessonsById = useAppStore((s) => s.lessonsById);

@@ -1,11 +1,11 @@
 import { useEffect, useId, useRef, useState } from "react";
 import {
   Download,
+  FileText,
   FolderOpen,
   FolderX,
   RefreshCw,
   Settings,
-  FileText,
 } from "lucide-react";
 import {
   clearLinkedFolder,
@@ -19,6 +19,10 @@ import {
 } from "../../lib/local-courses";
 import { applyCoursesResult } from "../../store/boot";
 import { useAppStore } from "../../store/useAppStore";
+import { iconBtn } from "./Topbar";
+
+const menuItem =
+  "flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2.5 text-left text-[13px] font-semibold text-text hover:bg-panel-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 export function SettingsMenu() {
   const [open, setOpen] = useState(false);
@@ -66,10 +70,10 @@ export function SettingsMenu() {
     coursesPhase === "needs-permission";
 
   return (
-    <div className="settings-menu" ref={rootRef}>
+    <div className="relative" ref={rootRef}>
       <button
         type="button"
-        className="icon-btn"
+        className={iconBtn}
         title="Settings"
         aria-label="Settings"
         aria-expanded={open}
@@ -82,17 +86,26 @@ export function SettingsMenu() {
         <Settings size={18} />
       </button>
       {open ? (
-        <div id={panelId} className="settings-panel" role="menu">
-          <div className="settings-panel-head">
-            <span className="settings-panel-title">Courses folder</span>
-            <span className="settings-panel-meta" title={folderName || undefined}>
+        <div
+          id={panelId}
+          className="absolute top-[calc(100%+8px)] right-0 z-[60] flex w-[min(300px,calc(100vw-24px))] flex-col gap-1 rounded-md border border-border bg-elevated p-2.5 text-text shadow-pop"
+          role="menu"
+        >
+          <div className="mb-1 flex flex-col gap-0.5 border-b border-border px-2 pt-1.5 pb-2.5">
+            <span className="text-[11px] font-bold tracking-[0.06em] text-muted-2 uppercase">
+              Courses folder
+            </span>
+            <span
+              className="truncate text-[13px] font-semibold text-text"
+              title={folderName || undefined}
+            >
               {folderName ? folderName : "Not selected"}
             </span>
           </div>
 
           <button
             type="button"
-            className="settings-item"
+            className={menuItem}
             role="menuitem"
             disabled={busy}
             onClick={() =>
@@ -120,7 +133,7 @@ export function SettingsMenu() {
           {coursesPhase === "needs-permission" ? (
             <button
               type="button"
-              className="settings-item"
+              className={menuItem}
               role="menuitem"
               disabled={busy}
               onClick={() =>
@@ -142,7 +155,7 @@ export function SettingsMenu() {
 
           <button
             type="button"
-            className="settings-item"
+            className={menuItem}
             role="menuitem"
             disabled={busy || !folderName || coursesPhase === "needs-permission"}
             onClick={() =>
@@ -163,7 +176,7 @@ export function SettingsMenu() {
 
           <button
             type="button"
-            className="settings-item"
+            className={menuItem}
             role="menuitem"
             disabled={busy || !folderName}
             onClick={() =>
@@ -186,7 +199,7 @@ export function SettingsMenu() {
 
           <button
             type="button"
-            className="settings-item"
+            className={menuItem}
             role="menuitem"
             disabled={busy}
             onClick={() => {
@@ -201,7 +214,7 @@ export function SettingsMenu() {
           {linked ? (
             <button
               type="button"
-              className="settings-item settings-item-danger"
+              className={`${menuItem} text-danger`}
               role="menuitem"
               disabled={busy}
               onClick={() =>
@@ -218,11 +231,15 @@ export function SettingsMenu() {
           ) : null}
 
           {folderStatus && !folderStatus.supported ? (
-            <p className="settings-hint">
+            <p className="mx-1 mt-1.5 mb-0.5 text-xs leading-snug text-muted">
               Use Chrome or Edge on desktop for local folders.
             </p>
           ) : null}
-          {message ? <p className="settings-hint">{message}</p> : null}
+          {message ? (
+            <p className="mx-1 mt-1.5 mb-0.5 text-xs leading-snug text-muted">
+              {message}
+            </p>
+          ) : null}
         </div>
       ) : null}
     </div>

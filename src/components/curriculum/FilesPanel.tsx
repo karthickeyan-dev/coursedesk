@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, File } from "lucide-react";
+import { resolveCourseAssetUrl } from "../../lib/assets";
 import { extensionLabel } from "../../lib/format";
 import type { CourseResource } from "../../types/course";
-import { resolveCourseAssetUrl } from "../../lib/assets";
 import { useAppStore } from "../../store/useAppStore";
 
 function groupResources(resources: CourseResource[]) {
@@ -62,18 +62,20 @@ export function FilesPanel() {
     if (!openFileGroupId || !groups.includes(openFileGroupId)) {
       setOpenFileGroupId(groups[0] ?? null);
     }
-  }, [activeCourse?.data.id, groups, openFileGroupId, setOpenFileGroupId]);
+  }, [groups, openFileGroupId, setOpenFileGroupId]);
 
   if (!resources.length) {
     return (
-      <div className="files-body">
-        <p className="files-empty">No downloadable files for this course.</p>
+      <div className="w-full p-0">
+        <p className="m-0 p-4 text-[13px] text-muted-2 italic">
+          No downloadable files for this course.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="files-body curriculum-list">
+    <div className="min-h-0 w-full flex-1 overflow-auto p-0 [scrollbar-gutter:stable]">
       {groups.map((groupName) => {
         const items = byGroup[groupName] || [];
         if (!items.length) return null;
@@ -81,65 +83,81 @@ export function FilesPanel() {
         return (
           <div
             key={groupName}
-            className={`category${open ? " open" : ""}`}
+            className="w-full max-w-full border-b border-border"
             data-file-group={groupName}
           >
             <button
               type="button"
-              className="category-toggle files-group-toggle"
+              className="grid w-full max-w-full grid-cols-[22px_1fr_auto] items-start gap-2.5 border-0 bg-panel-2 px-4 py-3.5 pr-4 pl-3.5 text-left text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]"
               aria-expanded={open}
-              onClick={() =>
-                setOpenFileGroupId(open ? null : groupName)
-              }
+              onClick={() => setOpenFileGroupId(open ? null : groupName)}
             >
-              <span className="files-group-spacer" aria-hidden="true" />
-              <span className="category-text">
-                <span className="label">{groupName}</span>
-                <span className="meta">
+              <span className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
+              <span className="flex min-w-0 flex-col gap-1">
+                <span className="text-sm leading-snug font-bold">{groupName}</span>
+                <span className="text-left text-xs font-medium text-muted-2 tabular-nums">
                   {items.length} file{items.length === 1 ? "" : "s"}
                 </span>
               </span>
-              <span className="category-chevron">
-                <ChevronRight size={16} className="chev" />
+              <span className="mt-0.5 grid place-items-center">
+                <ChevronRight
+                  size={16}
+                  className={[
+                    "text-muted-2 transition-transform duration-150",
+                    open ? "rotate-90" : "",
+                  ].join(" ")}
+                />
               </span>
             </button>
-            <div className="category-lessons">
+            <div className={open ? "block bg-elevated" : "hidden"}>
               {items.map((item) => {
                 const key = item.id || item.path;
                 const href = hrefById[key];
+                const body = (
+                  <>
+                    <span
+                      className="mt-px grid h-[18px] w-[18px] place-items-center text-muted-2"
+                      aria-hidden="true"
+                    >
+                      <File size={16} className="block" />
+                    </span>
+                    <span className="min-w-0 overflow-hidden">
+                      <span className="block truncate text-[13.5px] leading-snug font-medium">
+                        {item.title || item.path}
+                      </span>
+                      {item.description ? (
+                        <span className="mt-0.5 block text-xs text-muted-2">
+                          {item.description}
+                        </span>
+                      ) : null}
+                    </span>
+                    {href ? (
+                      <span className="mt-px shrink-0 text-xs font-semibold tracking-wide text-muted-2 uppercase tabular-nums">
+                        {extensionLabel(item.path)}
+                      </span>
+                    ) : null}
+                  </>
+                );
                 if (!href) {
                   return (
-                    <div key={key} className="files-item files-item-pending">
-                      <span className="files-item-icon" aria-hidden="true">
-                        <File size={16} />
-                      </span>
-                      <span className="title-wrap">
-                        <span className="title">{item.title || item.path}</span>
-                      </span>
+                    <div
+                      key={key}
+                      className="grid w-full max-w-full grid-cols-[22px_1fr_auto] items-start gap-2.5 border-0 border-l-[3px] border-l-transparent bg-transparent py-3 pr-4 pl-3.5 opacity-65"
+                    >
+                      {body}
                     </div>
                   );
                 }
                 return (
                   <a
                     key={key}
-                    className="files-item"
+                    className="grid w-full max-w-full min-w-0 cursor-pointer grid-cols-[22px_1fr_auto] items-start gap-2.5 border-0 border-l-[3px] border-l-transparent bg-transparent py-3 pr-4 pl-3.5 font-inherit text-text no-underline hover:bg-text/4"
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
                     download={item.title || undefined}
                   >
-                    <span className="files-item-icon" aria-hidden="true">
-                      <File size={16} />
-                    </span>
-                    <span className="title-wrap">
-                      <span className="title">{item.title || item.path}</span>
-                      {item.description ? (
-                        <span className="lesson-meta">{item.description}</span>
-                      ) : null}
-                    </span>
-                    <span className="lesson-duration files-item-ext">
-                      {extensionLabel(item.path)}
-                    </span>
+                    {body}
                   </a>
                 );
               })}

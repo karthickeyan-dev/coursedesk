@@ -13,15 +13,16 @@ export function LessonView() {
   const notes = lesson ? notesByLessonId[lesson.id] : null;
 
   useEffect(() => {
-    const main = document.querySelector(".main");
+    if (!activeLessonId) return;
+    const main = document.querySelector("main");
     if (main) main.scrollTop = 0;
   }, [activeLessonId]);
 
   if (!lesson) {
     return (
-      <div className="lesson-view">
-        <div className="no-video">
-          <strong>No lectures in this course</strong>
+      <div>
+        <div className="grid place-items-center gap-1.5 p-6 text-center text-[#d1d7dc]">
+          <strong className="text-base text-white">No lectures in this course</strong>
           <span>Add lessons to the course package to get started.</span>
         </div>
       </div>
@@ -29,11 +30,11 @@ export function LessonView() {
   }
 
   return (
-    <div className="lesson-view">
+    <div>
       <VideoPlayer />
       {!lesson.video && (
-        <div className="no-video">
-          <strong>No video for this lecture</strong>
+        <div className="grid place-items-center gap-1.5 p-6 text-center text-[#d1d7dc]">
+          <strong className="text-base text-white">No video for this lecture</strong>
           <span>Notes are still available below.</span>
         </div>
       )}

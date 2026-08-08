@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import { renderNotesInto } from "../../lib/notes";
-import { hasNotes } from "../../lib/notes";
+import { hasNotes, renderNotesInto } from "../../lib/notes";
 
 export function NotesPanel({
   markdown,
@@ -17,10 +16,16 @@ export function NotesPanel({
 
   return (
     <section
-      className={`notes-panel${empty ? " is-empty" : ""}`}
+      className={[
+        "border-b border-border bg-elevated",
+        empty ? "opacity-90" : "",
+      ].join(" ")}
       aria-label="Overview"
     >
-      <article ref={ref} className="notes-body prose" />
+      <article
+        ref={ref}
+        className="prose mx-auto w-full max-w-[760px] px-[22px] pt-6 pb-12"
+      />
     </section>
   );
 }

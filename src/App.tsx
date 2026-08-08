@@ -53,34 +53,37 @@ export function App() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [
-    goToAdjacentLesson,
-    markActiveComplete,
-    hasActiveVideo,
-    activeLessonId,
-  ]);
+  }, [goToAdjacentLesson, markActiveComplete, hasActiveVideo, activeLessonId]);
 
   const libraryMode = view === "library";
-  const workspaceClass = [
-    "workspace",
-    libraryMode ? "library-mode" : "",
-    !curriculumOpen ? "curriculum-collapsed" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
 
   return (
-    <div className="app">
+    <div className="flex h-screen min-h-0 flex-col">
       <Topbar />
-      <div className={workspaceClass}>
-        <main className="main">
+      <div
+        className={
+          libraryMode
+            ? "grid min-h-0 flex-1 grid-cols-1"
+            : [
+                "relative grid min-h-0 flex-1 grid-cols-1",
+                curriculumOpen
+                  ? "max-[979px]:grid-cols-1 min-[980px]:grid-cols-[1fr_var(--spacing-sidebar)]"
+                  : "min-[980px]:grid-cols-[1fr_0fr]",
+              ].join(" ")
+        }
+      >
+        <main className="min-h-0 min-w-0 overflow-auto bg-bg [scrollbar-gutter:stable]">
           {libraryMode ? (
             <CourseLibrary />
           ) : coursesLoaded ? (
             <LessonView />
           ) : null}
         </main>
-        {!libraryMode && <CurriculumSidebar />}
+        {!libraryMode && (
+          <CurriculumSidebar
+            collapsed={!curriculumOpen}
+          />
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,9 @@ import { useAppStore } from "../../store/useAppStore";
 import { ProgressPill } from "./ProgressPill";
 import { SettingsMenu } from "./SettingsMenu";
 
+const iconBtn =
+  "grid h-9 w-9 place-items-center rounded-full border-0 bg-transparent text-tb-text transition-colors hover:bg-tb-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
 export function Topbar() {
   const view = useAppStore((s) => s.view);
   const theme = useAppStore((s) => s.theme);
@@ -21,12 +24,12 @@ export function Topbar() {
     : "CourseDesk";
 
   return (
-    <header className="topbar">
-      <div className="topbar-left">
+    <header className="z-20 flex h-(--spacing-topbar) shrink-0 items-center justify-between gap-4 border-b border-tb-border bg-tb px-5 text-tb-text">
+      <div className="flex min-w-0 items-center gap-3">
         {inCourse && (
           <button
             type="button"
-            className="icon-btn"
+            className={iconBtn}
             title="All courses"
             aria-label="Back to all courses"
             onClick={showLibrary}
@@ -34,20 +37,27 @@ export function Topbar() {
             <ChevronLeft size={18} />
           </button>
         )}
-        <span className="logo" aria-hidden="true">
+        <span
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-sm bg-accent text-xs font-bold text-white"
+          aria-hidden="true"
+        >
           ◆
         </span>
-        <div className="topbar-titles">
-          <div className="course-label">{label}</div>
-          <h1 className="course-title">{title}</h1>
+        <div className="min-w-0">
+          <div className="text-[11px] leading-tight tracking-[0.06em] text-tb-muted uppercase">
+            {label}
+          </div>
+          <h1 className="m-0 max-w-[min(52vw,520px)] truncate text-sm font-bold text-tb-text max-[979px]:max-w-[42vw]">
+            {title}
+          </h1>
         </div>
       </div>
-      <div className="topbar-right">
+      <div className="flex shrink-0 items-center gap-1">
         <ProgressPill />
         <SettingsMenu />
         <button
           type="button"
-          className="icon-btn"
+          className={iconBtn}
           title={theme === "light" ? "Dark mode" : "Light mode"}
           aria-label={
             theme === "light" ? "Switch to dark theme" : "Switch to light theme"
@@ -59,7 +69,7 @@ export function Topbar() {
         {inCourse && (
           <button
             type="button"
-            className="icon-btn curriculum-toggle"
+            className={iconBtn}
             title="Course content"
             aria-label="Toggle course content"
             aria-expanded={curriculumOpen}
@@ -72,3 +82,5 @@ export function Topbar() {
     </header>
   );
 }
+
+export { iconBtn };

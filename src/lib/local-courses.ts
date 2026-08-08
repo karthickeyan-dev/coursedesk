@@ -8,8 +8,9 @@ import {
   saveCoursesRootHandle,
 } from "./fs-handle-store";
 import {
+  loadPackagingGuideMarkdown,
   PACKAGING_GUIDE_FILENAME,
-  PACKAGING_GUIDE_MARKDOWN,
+  PACKAGING_GUIDE_URL,
 } from "./course-packaging-guide";
 
 export type FolderPermissionState =
@@ -383,14 +384,18 @@ async function resolveFileInCourse(
 
   let current: FileSystemDirectoryHandle = dir;
   for (let i = 0; i < parts.length - 1; i++) {
+    const segment = parts[i];
+    if (!segment) return null;
     try {
-      current = await current.getDirectoryHandle(parts[i]!);
+      current = await current.getDirectoryHandle(segment);
     } catch {
       return null;
     }
   }
+  const fileName = parts[parts.length - 1];
+  if (!fileName) return null;
   try {
-    const fh = await current.getFileHandle(parts[parts.length - 1]!);
+    const fh = await current.getFileHandle(fileName);
     return await fh.getFile();
   } catch {
     return null;
@@ -414,7 +419,8 @@ export async function resolveLocalAssetUrl(
   else if (rel.startsWith("courses/")) {
     // different course path — unsupported in local mode unless same id
     const m = rel.match(/^courses\/([^/]+)\/(.+)$/);
-    if (m && m[1] === courseId) rel = m[2]!;
+    const rest = m?.[2];
+    if (m?.[1] === courseId && rest) rel = rest;
     else return null;
   }
 
@@ -437,28 +443,24 @@ export async function writePackagingGuide(): Promise<void> {
       "Write permission is required to save COURSE_TEMPLATE.md. Re-select the folder and allow edit access."
     );
   }
+  const markdown = await loadPackagingGuideMarkdown();
   const fh = await rootHandle.getFileHandle(PACKAGING_GUIDE_FILENAME, {
     create: true,
   });
   const writable = await fh.createWritable();
-  await writable.write(PACKAGING_GUIDE_MARKDOWN);
+  await writable.write(markdown);
   await writable.close();
 }
 
-/** Download guide as a file when write permission is unavailable. */
+/** Download guide from the static public asset (same file as write source). */
 export function downloadPackagingGuide(): void {
-  const blob = new Blob([PACKAGING_GUIDE_MARKDOWN], {
-    type: "text/markdown;charset=utf-8",
-  });
-  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
+  a.href = PACKAGING_GUIDE_URL;
   a.download = PACKAGING_GUIDE_FILENAME;
   a.rel = "noopener";
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
 }
 
 export async function packagingGuideExists(): Promise<boolean> {

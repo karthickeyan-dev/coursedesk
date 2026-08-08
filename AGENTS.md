@@ -2,7 +2,7 @@
 
 Notes for AI agents and contributors working on **this repository** (the player app).
 
-For packaging **course content** on disk, use `COURSE_TEMPLATE.md` inside the user’s linked courses folder — not this file. That guide is defined in `src/lib/course-packaging-guide.ts` and written by the app.
+For packaging **course content** on disk, use `COURSE_TEMPLATE.md` inside the user’s linked courses folder — not this file. The canonical guide lives at `public/COURSE_TEMPLATE.md` and is written/downloaded by the app.
 
 ---
 
@@ -21,7 +21,7 @@ For packaging **course content** on disk, use `COURSE_TEMPLATE.md` inside the us
 |-------|--------|
 | Tooling | Vite 6, TypeScript, **pnpm** |
 | UI | React 19, Zustand |
-| Styles | `src/styles/styles.css` (CSS variables; no Tailwind) |
+| Styles | Tailwind v4 utilities + `src/styles/styles.css` (tokens, prose, player ranges) |
 | Notes | `marked` + `highlight.js` |
 | Icons | `lucide-react` |
 | Courses | `src/lib/local-courses.ts` + `course-loader.ts` |
@@ -56,7 +56,9 @@ src/
     local-courses.ts          # folder pick, scan, scripts, blob URLs
     fs-handle-store.ts        # IndexedDB for FileSystemDirectoryHandle
     course-loader.ts          # boot / select / rescan / clear flows
-    course-packaging-guide.ts # COURSE_TEMPLATE.md content
+    course-packaging-guide.ts # filename + load/download helpers
+public/
+  COURSE_TEMPLATE.md          # packaging guide (static asset)
     storage.ts                # coursedesk.* localStorage only
     assets.ts                 # resolveCourseAssetUrl, library helpers
     notes.ts, format.ts
@@ -111,7 +113,7 @@ netlify.toml                  # static deploy + SPA redirect
 | First visit / no folder | Empty state → `selectAndLoadCoursesFolder` |
 | Return visit | `bootLocalCourses` → restore handle → load or `needs-permission` |
 | Rescan | Settings / empty state → `rescanCoursesFolder` |
-| Packaging guide | Write/download via `local-courses` + `course-packaging-guide` |
+| Packaging guide | `public/COURSE_TEMPLATE.md` → write/download via `local-courses` |
 
 Permission re-grant often needs a **user gesture** (`requestPermission`).
 
