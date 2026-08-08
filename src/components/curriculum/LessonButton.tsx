@@ -5,10 +5,8 @@ import {
   lessonDurationSeconds,
 } from "../../lib/assets";
 import type { Lesson } from "../../types/course";
-import {
-  isLessonFinished,
-  useAppStore,
-} from "../../store/useAppStore";
+import { isLessonFinished } from "../../store/selectors";
+import { useAppStore } from "../../store/useAppStore";
 
 export function LessonButton({ lesson }: { lesson: Lesson }) {
   const activeLessonId = useAppStore((s) => s.activeLessonId);

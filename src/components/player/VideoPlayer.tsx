@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
+import { resolveCourseAsset } from "../../lib/assets";
 import * as Storage from "../../lib/storage";
-import { useAppStore, resolveCourseAsset } from "../../store/useAppStore";
+import { useAppStore } from "../../store/useAppStore";
 import { PlayerControls } from "./PlayerControls";
 import { PlayerHud } from "./PlayerHud";
 import { useVideoPlayer } from "./useVideoPlayer";

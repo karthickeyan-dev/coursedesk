@@ -5,7 +5,7 @@
 | **Document** | Design: modern stack migration (React + Tailwind) |
 | **Author** | TBD |
 | **Date** | 2026-08-08 |
-| **Status** | Draft (rev 2 — review feedback addressed) |
+| **Status** | Completed (historical) — React migration landed |
 | **Codebase** | `/Users/karthic/Projects/coursedesk` |
 | **Related** | `AGENTS.md`, `course-template/`, `plugins/vite-plugin-courses.ts` |
 

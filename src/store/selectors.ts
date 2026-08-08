@@ -72,3 +72,10 @@ export function progressAriaLabel(stats: ProgressStats): string {
     stats;
   return `${overall ? "Overall " : ""}${percent}% complete. ${done} of ${total} lectures completed, ${remaining} remaining. ${fmt(doneSeconds)} of ${fmt(totalSeconds)} watched, ${fmt(remainingSeconds)} remaining.`;
 }
+
+export function isLessonFinished(
+  completedLessonIds: string[],
+  lessonId: string
+): boolean {
+  return completedLessonIds.includes(lessonId);
+}

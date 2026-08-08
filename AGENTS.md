@@ -3,8 +3,9 @@
 ## Stack
 
 - Vite + React 19 + TypeScript, **pnpm**
-- UI: React + Zustand; styling: existing CSS shell + Tailwind v4 tokens
-- Packages: `marked`, `highlight.js`, `lucide-react`, `sirv`
+- UI: React + Zustand; styling: CSS shell + Tailwind v4 tokens
+- Packages: `marked`, `highlight.js`, `lucide-react`
+- Dev: `sirv` (HTTP Range for course video seek via Vite plugin)
 
 ## Run
 
@@ -24,13 +25,19 @@ pnpm start
 
 | Path | Role |
 |------|------|
-| `src/` | React app (course-agnostic) |
-| `src/components/` | UI components |
-| `src/store/` | Zustand store + boot |
-| `src/lib/` | Shared helpers (storage, loader, notes, format) |
-| `plugins/vite-plugin-courses.ts` | Live `/courses/manifest.json` + static media |
+| `src/components/` | UI by feature (library, lesson, curriculum, player, layout) |
+| `src/store/` | Zustand store, boot, progress selectors |
+| `src/lib/` | Domain helpers (storage, loader, notes, format, assets) |
+| `plugins/vite-plugin-courses.ts` | Live `/courses/manifest.json` + static media (sirv) |
 | `course-template/` | Package contract |
 | `courses/` | Gitignored local packages |
+
+## Import rules
+
+- Path / duration / labels → `src/lib/assets`, `src/lib/format`
+- Progress helpers → `src/store/selectors` (not from `useAppStore`)
+- Store → state and actions only (`useAppStore`)
+- Course packages → classic script tags (`window.COURSES`); never `import()` course.js
 
 ## Rules
 
@@ -38,5 +45,5 @@ pnpm start
 - Never hardcode course ids in app source
 - Keep lesson `id`s stable (progress keys)
 - Do not open via `file://`
-- Course packages load via classic script tags (`window.COURSES`) — never `import()` course.js
 - `storage.ts` is the only writer of `coursedesk.*` localStorage keys
+- Keep ProgressPill `useShallow(selectProgressStats)` — required for React 19

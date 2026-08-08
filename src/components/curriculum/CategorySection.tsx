@@ -2,10 +2,8 @@ import { Check, ChevronRight } from "lucide-react";
 import { formatDurationTotal } from "../../lib/format";
 import { sumLessonDurations } from "../../lib/assets";
 import type { Category, Lesson } from "../../types/course";
-import {
-  isLessonFinished,
-  useAppStore,
-} from "../../store/useAppStore";
+import { isLessonFinished } from "../../store/selectors";
+import { useAppStore } from "../../store/useAppStore";
 import { LessonButton } from "./LessonButton";
 
 export function CategorySection({

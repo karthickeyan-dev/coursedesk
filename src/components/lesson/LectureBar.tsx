@@ -1,8 +1,6 @@
 import { categoryTitle } from "../../lib/assets";
-import {
-  isLessonFinished,
-  useAppStore,
-} from "../../store/useAppStore";
+import { isLessonFinished } from "../../store/selectors";
+import { useAppStore } from "../../store/useAppStore";
 
 export function LectureBar() {
   const activeLessonId = useAppStore((s) => s.activeLessonId);

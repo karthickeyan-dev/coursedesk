@@ -20,7 +20,6 @@
     "marked": "^15.0.12",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "sirv": "^3.0.2",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
@@ -30,6 +29,7 @@
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^4.7.0",
     "happy-dom": "^20.11.1",
+    "sirv": "^3.0.2",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",

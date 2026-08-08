@@ -1,110 +1,32 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { applyResumeSeconds, formatRate, formatTime } from "../../lib/format";
+import {
+  exitFullscreen,
+  getFullscreenElement,
+  requestFullscreen,
+} from "./fullscreen";
+import {
+  HUD_MS,
+  initialPlayerUi,
+  PERSIST_MS,
+  PLAYBACK_RATES,
+  SEEK_STEP,
+  VOLUME_STEP,
+  type HudKey,
+  type PlayerUiState,
+} from "./playerTypes";
 
-export const SEEK_STEP = 5;
-export const VOLUME_STEP = 0.1;
-export const HUD_MS = 900;
-export const PERSIST_MS = 2000;
-export const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
-
-export type HudKey =
-  | "play"
-  | "pause"
-  | "seekBack"
-  | "seekForward"
-  | "volumeHigh"
-  | "volumeLow"
-  | "volumeMute"
-  | "fullscreen"
-  | "exitFullscreen"
-  | "jumpStart"
-  | "jumpEnd"
-  | "jump";
-
-export interface HudState {
-  key: HudKey;
-  label: string;
-  meter?: number;
-  visible: boolean;
-}
-
-export interface PlayerUiState {
-  playing: boolean;
-  muted: boolean;
-  volume: number;
-  currentTime: number;
-  duration: number;
-  seekPercent: number;
-  showRemaining: boolean;
-  rate: number;
-  fullscreen: boolean;
-  hasSrc: boolean;
-  hud: HudState;
-}
-
-const initialUi: PlayerUiState = {
-  playing: false,
-  muted: false,
-  volume: 1,
-  currentTime: 0,
-  duration: 0,
-  seekPercent: 0,
-  showRemaining: true,
-  rate: 1,
-  fullscreen: false,
-  hasSrc: false,
-  hud: { key: "play", label: "", visible: false },
-};
-
-function getFullscreenElement(): Element | null {
-  const doc = document as Document & {
-    webkitFullscreenElement?: Element | null;
-    mozFullScreenElement?: Element | null;
-    msFullscreenElement?: Element | null;
-  };
-  return (
-    document.fullscreenElement ||
-    doc.webkitFullscreenElement ||
-    doc.mozFullScreenElement ||
-    doc.msFullscreenElement ||
-    null
-  );
-}
-
-function requestFullscreen(element: HTMLElement): Promise<void> {
-  const el = element as HTMLElement & {
-    webkitRequestFullscreen?: () => Promise<void> | void;
-    webkitRequestFullScreen?: () => Promise<void> | void;
-    mozRequestFullScreen?: () => Promise<void> | void;
-    msRequestFullscreen?: () => Promise<void> | void;
-    webkitEnterFullscreen?: () => void;
-  };
-  if (el.requestFullscreen) return el.requestFullscreen();
-  if (el.webkitRequestFullscreen) return Promise.resolve(el.webkitRequestFullscreen());
-  if (el.webkitRequestFullScreen) return Promise.resolve(el.webkitRequestFullScreen());
-  if (el.mozRequestFullScreen) return Promise.resolve(el.mozRequestFullScreen());
-  if (el.msRequestFullscreen) return Promise.resolve(el.msRequestFullscreen());
-  if (el.webkitEnterFullscreen) {
-    el.webkitEnterFullscreen();
-    return Promise.resolve();
-  }
-  return Promise.reject(new Error("Fullscreen API not available"));
-}
-
-function exitFullscreen(): Promise<void> {
-  const doc = document as Document & {
-    webkitExitFullscreen?: () => Promise<void> | void;
-    webkitCancelFullScreen?: () => Promise<void> | void;
-    mozCancelFullScreen?: () => Promise<void> | void;
-    msExitFullscreen?: () => Promise<void> | void;
-  };
-  if (document.exitFullscreen) return document.exitFullscreen();
-  if (doc.webkitExitFullscreen) return Promise.resolve(doc.webkitExitFullscreen());
-  if (doc.webkitCancelFullScreen) return Promise.resolve(doc.webkitCancelFullScreen());
-  if (doc.mozCancelFullScreen) return Promise.resolve(doc.mozCancelFullScreen());
-  if (doc.msExitFullscreen) return Promise.resolve(doc.msExitFullscreen());
-  return Promise.resolve();
-}
+// Re-export for stable consumer import paths (PlayerControls, PlayerHud, App).
+export {
+  HUD_MS,
+  PERSIST_MS,
+  PLAYBACK_RATES,
+  SEEK_STEP,
+  VOLUME_STEP,
+  type HudKey,
+  type HudState,
+  type PlayerUiState,
+} from "./playerTypes";
 
 export function isEditableTarget(target: EventTarget | null): boolean {
   if (!target || !(target instanceof Element)) return false;
@@ -155,7 +77,7 @@ export interface UseVideoPlayerApi {
 
 export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerApi {
   const { videoRef, stageRef, onTimePersist, enabled = true } = options;
-  const [ui, setUi] = useState<PlayerUiState>(initialUi);
+  const [ui, setUi] = useState<PlayerUiState>(initialPlayerUi);
 
   const lastVolumeRef = useRef(1);
   const pendingResumeRef = useRef<number | null>(null);

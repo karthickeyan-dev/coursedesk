@@ -1,5 +1,11 @@
 /**
- * Live course discovery + static /courses/* (videos need Range support via sirv).
+ * Live course discovery + static /courses/* media.
+ *
+ * Uses `sirv` (not Vite publicDir) because:
+ * - packages live in gitignored `courses/` outside `public/`
+ * - video seek needs HTTP Range / 206 Partial Content (sirv handles this)
+ *
+ * Do not remove sirv lightly — a custom Range middleware is easy to get wrong.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -50,7 +56,7 @@ function attach(server: { middlewares: Connect.Server }): void {
     next();
   });
 
-  // Static course packages (sirv handles Range for video seek)
+  // Static course packages (sirv: Range for video seek; single:false so missing files 404)
   server.middlewares.use(
     "/courses",
     sirv(coursesDir, {

@@ -2,7 +2,8 @@ import { useEffect, useMemo } from "react";
 import { ChevronRight, File } from "lucide-react";
 import { extensionLabel } from "../../lib/format";
 import type { CourseResource } from "../../types/course";
-import { resolveCourseAsset, useAppStore } from "../../store/useAppStore";
+import { resolveCourseAsset } from "../../lib/assets";
+import { useAppStore } from "../../store/useAppStore";
 
 function groupResources(resources: CourseResource[]) {
   const groups: string[] = [];

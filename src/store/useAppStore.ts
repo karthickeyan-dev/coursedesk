@@ -1,13 +1,4 @@
 import { create } from "zustand";
-import {
-  buildAvailableCourses,
-  categoryTitle as categoryTitleOf,
-  lectureTypeLabel as lectureTypeOf,
-  lessonDurationSeconds,
-  resolveCourseAsset,
-  sumLessonDurations,
-} from "../lib/assets";
-import { loadCourses } from "../lib/course-loader";
 import * as Storage from "../lib/storage";
 import type { Theme } from "../lib/storage";
 import type {
@@ -163,7 +154,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   selectLesson: (lessonId) => {
-    const { activeCourse, lessonsById, activeLessonId } = get();
+    const { activeCourse, lessonsById } = get();
     if (!activeCourse) return;
     const lesson = lessonsById[lessonId];
     if (!lesson) return;
@@ -175,9 +166,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
       activeLessonId: lessonId,
       openCategoryId: lesson.categoryId,
     });
-
-    // Keep reference for player persist side-effect consumers
-    void activeLessonId;
   },
 
   toggleFinished: (lessonId) => {
@@ -186,9 +174,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const setIds = new Set(completedLessonIds);
     if (setIds.has(lessonId)) setIds.delete(lessonId);
     else setIds.add(lessonId);
-    const next = [...setIds];
     Storage.saveFinishedIds(activeCourse.data.id, setIds);
-    set({ completedLessonIds: next });
+    set({ completedLessonIds: [...setIds] });
   },
 
   toggleSectionFinished: (lessonIds) => {
@@ -256,24 +243,3 @@ export const useAppStore = create<AppStore>((set, get) => ({
     if (activeLessonId) toggleFinished(activeLessonId);
   },
 }));
-
-export function finishedSet(completedLessonIds: string[]): Set<string> {
-  return new Set(completedLessonIds);
-}
-
-export function isLessonFinished(
-  completedLessonIds: string[],
-  lessonId: string
-): boolean {
-  return completedLessonIds.includes(lessonId);
-}
-
-export {
-  categoryTitleOf as categoryTitle,
-  lectureTypeOf as lectureTypeLabel,
-  lessonDurationSeconds,
-  resolveCourseAsset,
-  sumLessonDurations,
-  buildAvailableCourses,
-  loadCourses,
-};
