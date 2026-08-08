@@ -20,17 +20,16 @@ interface Props {
   api: UseVideoPlayerApi;
 }
 
-/** Shared time label style — current + duration stay the same size. */
-const timeClass =
-  "m-0 min-w-[3.25rem] shrink-0 border-0 bg-transparent p-0 text-left text-xs font-normal leading-none text-[#d1d7dc] tabular-nums";
+/** Time labels — font forced in `.pc-time` CSS (beats `button { font: inherit }`). */
+const timeClass = "pc-time";
 
-const iconBtnClass =
-  "h-9 w-9 shrink-0 rounded-md text-[#f7f9fa] hover:bg-white/10 hover:text-white";
+/** Icon / rate control buttons — size forced in `.pc-btn` CSS for xs parity. */
+const iconBtnClass = "pc-btn";
 
 const iconProps = {
-  size: 20 as const,
+  size: 16 as const,
   strokeWidth: 2 as const,
-  className: "block size-5",
+  className: "block size-4",
   "aria-hidden": true as const,
 };
 
@@ -38,6 +37,7 @@ export function PlayerControls({ ui, api }: Props) {
   if (!ui.hasSrc) return null;
 
   const volPct = Math.round(ui.volume * 100);
+  const currentLabel = api.formatTime(ui.currentTime);
   const durationLabel = (() => {
     if (!ui.duration) return ui.showRemaining ? "-0:00" : "0:00";
     if (ui.showRemaining) {
@@ -55,7 +55,7 @@ export function PlayerControls({ ui, api }: Props) {
         : Volume2;
 
   return (
-    <div className="player-controls box-border flex w-full shrink-0 items-center gap-1.5 border-t border-[#2a2a2a] bg-[#141414] px-2.5 py-2 text-[#f7f9fa] sm:gap-2 sm:px-3.5 sm:py-2.5">
+    <div className="player-controls box-border flex w-full shrink-0 items-center gap-2.5 border-t border-[#2a2a2a] bg-[#141414] px-3 py-2 text-[#f7f9fa] sm:gap-3 sm:px-3.5 sm:py-2.5">
       <Button
         type="button"
         variant="ghost"
@@ -71,7 +71,7 @@ export function PlayerControls({ ui, api }: Props) {
         )}
       </Button>
 
-      <span className={timeClass}>{api.formatTime(ui.currentTime)}</span>
+      <span className={cn(timeClass, "text-right")}>{currentLabel}</span>
 
       <input
         type="range"
@@ -89,7 +89,7 @@ export function PlayerControls({ ui, api }: Props) {
         type="button"
         className={cn(
           timeClass,
-          "cursor-pointer rounded-sm hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          "cursor-pointer text-left hover:text-white focus:outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-primary/50"
         )}
         aria-label={
           ui.showRemaining ? "Show total duration" : "Show remaining time"
@@ -105,7 +105,7 @@ export function PlayerControls({ ui, api }: Props) {
       </button>
 
       <div className="group relative flex shrink-0 items-center">
-        <div className="absolute bottom-[calc(100%+6px)] left-1/2 z-[5] box-border hidden h-[120px] w-10 -translate-x-1/2 items-center justify-center rounded-lg border border-[#3e4143] bg-[#1c1d1f] py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)] after:absolute after:top-full after:right-0 after:left-0 after:h-2 after:content-[''] group-hover:flex group-focus-within:flex">
+        <div className="pc-menu absolute bottom-[calc(100%+8px)] left-1/2 z-[5] box-border hidden h-[120px] w-10 -translate-x-1/2 items-center justify-center rounded-md border border-[#3e4143] bg-[#1c1d1f] py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)] after:absolute after:top-full after:right-0 after:left-0 after:h-2 after:content-[''] group-hover:flex group-focus-within:flex">
           <input
             type="range"
             className="pc-volume-slider m-0 p-0"
@@ -135,10 +135,7 @@ export function PlayerControls({ ui, api }: Props) {
         <Button
           type="button"
           variant="ghost"
-          className={cn(
-            iconBtnClass,
-            "min-w-10 px-1.5 text-xs font-medium tracking-wide tabular-nums"
-          )}
+          className={cn(iconBtnClass, "pc-rate-btn min-w-8 px-1.5")}
           aria-label="Playback speed"
           aria-haspopup="listbox"
           title={`Playback speed ${api.formatRate(ui.rate)}`}
@@ -146,7 +143,7 @@ export function PlayerControls({ ui, api }: Props) {
           {api.formatRate(ui.rate)}
         </Button>
         <div
-          className="absolute right-0 bottom-[calc(100%+6px)] z-[6] hidden min-w-[72px] gap-0.5 rounded-lg border border-[#3e4143] bg-[#1c1d1f] py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)] after:absolute after:top-full after:right-0 after:left-0 after:h-2 after:content-[''] group-hover:grid group-focus-within:grid"
+          className="pc-menu absolute right-0 bottom-[calc(100%+8px)] z-[6] hidden min-w-[72px] gap-0.5 rounded-md border border-[#3e4143] bg-[#1c1d1f] py-1 shadow-[0_8px_24px_rgba(0,0,0,0.45)] after:absolute after:top-full after:right-0 after:left-0 after:h-2 after:content-[''] group-hover:grid group-focus-within:grid"
           role="listbox"
           aria-label="Playback speed"
         >
@@ -155,9 +152,8 @@ export function PlayerControls({ ui, api }: Props) {
               key={rate}
               type="button"
               className={cn(
-                "w-full cursor-pointer appearance-none border-0 bg-transparent px-3.5 py-2 text-left text-xs font-medium text-[#d1d7dc] tabular-nums hover:bg-white/8 hover:text-white",
-                Math.abs(rate - ui.rate) < 0.001 &&
-                  "bg-primary/25 text-white"
+                "pc-rate-option w-full cursor-pointer appearance-none border-0 bg-transparent px-3 py-1.5 text-left tabular-nums hover:bg-white/10 hover:text-white",
+                Math.abs(rate - ui.rate) < 0.001 && "bg-primary/25 text-white"
               )}
               role="option"
               data-rate={rate}
