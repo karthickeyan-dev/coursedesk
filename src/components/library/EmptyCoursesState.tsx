@@ -1,4 +1,5 @@
 import { FolderOpen, RefreshCw } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,9 +63,9 @@ export function EmptyCoursesState({
   return (
     <div className="w-full max-w-[720px]" role="status">
       <div className="px-0 pt-2 pb-6">
-        <p className="mb-2 text-xs font-bold tracking-[0.08em] text-accent uppercase">
-          CourseDesk
-        </p>
+        <div className="mb-3">
+          <BrandLogo wordmarkClassName="text-foreground" />
+        </div>
         <h2 className="m-0 mb-2.5 text-[clamp(1.5rem,2.2vw,1.85rem)] leading-snug tracking-tight">
           {title}
         </h2>

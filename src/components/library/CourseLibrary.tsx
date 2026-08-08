@@ -74,9 +74,6 @@ export function CourseLibrary() {
       <div className="mx-auto w-full max-w-[1200px]">
         <header className="mb-7 flex items-end justify-between gap-5 border-b border-border pb-5 max-sm:flex-col max-sm:items-start max-sm:gap-3.5">
           <div className="min-w-0">
-            <p className="mb-2 text-xs font-bold tracking-[0.08em] text-accent uppercase">
-              CourseDesk
-            </p>
             <h2 className="m-0 mb-2 text-[clamp(1.6rem,2.4vw,2rem)] leading-tight tracking-tight">
               Choose a course
             </h2>

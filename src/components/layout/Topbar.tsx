@@ -1,4 +1,5 @@
 import { ChevronLeft, List, Moon, Sun } from "lucide-react";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/useAppStore";
 import { ProgressPill } from "./ProgressPill";
@@ -41,12 +42,7 @@ export function Topbar() {
             <ChevronLeft className="size-[18px]" strokeWidth={2} />
           </Button>
         )}
-        <span
-          className="grid h-7 w-7 shrink-0 place-items-center rounded-sm bg-primary text-xs font-semibold text-primary-foreground"
-          aria-hidden="true"
-        >
-          ◆
-        </span>
+        {!inCourse && <BrandMark className="h-7 w-7" title="CourseDesk" />}
         <div className="min-w-0">
           <div className="text-[11px] leading-tight tracking-[0.06em] text-tb-muted uppercase">
             {label}
