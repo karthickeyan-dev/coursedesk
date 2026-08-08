@@ -9,6 +9,11 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   publicDir: "public",
+  resolve: {
+    alias: {
+      "@": path.join(root, "src"),
+    },
+  },
   server: {
     port: 5173,
     strictPort: false,

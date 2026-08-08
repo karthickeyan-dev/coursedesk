@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { hasNotes, renderNotesInto } from "../../lib/notes";
+import { hasNotes, renderNotesInto } from "@/lib/notes";
 
 export function NotesPanel({
   markdown,
@@ -10,16 +10,17 @@ export function NotesPanel({
   const empty = !hasNotes(markdown);
 
   useEffect(() => {
-    if (!ref.current) return;
-    renderNotesInto(ref.current, empty ? null : markdown);
+    if (!ref.current || empty) return;
+    renderNotesInto(ref.current, markdown);
   }, [markdown, empty]);
+
+  // Empty notes are not rendered here — LessonView shows a combined
+  // empty state only when both video and notes are missing.
+  if (empty) return null;
 
   return (
     <section
-      className={[
-        "border-b border-border bg-elevated",
-        empty ? "opacity-90" : "",
-      ].join(" ")}
+      className="border-b border-border bg-elevated"
       aria-label="Overview"
     >
       <article

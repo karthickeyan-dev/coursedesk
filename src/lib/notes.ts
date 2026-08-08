@@ -1,8 +1,6 @@
 import { marked } from "marked";
 import hljs from "highlight.js/lib/common";
 
-const EMPTY = '<p class="notes-empty">No notes for this lecture.</p>';
-
 const CALLOUT = {
   any: /challenge|sdk\s*\d+|available only|tip|note:/i,
   challenge: /challenge/i,
@@ -18,7 +16,7 @@ export function renderNotesInto(
   markdownSource: string | null | undefined
 ): void {
   if (!hasNotes(markdownSource)) {
-    root.innerHTML = EMPTY;
+    root.innerHTML = "";
     return;
   }
 

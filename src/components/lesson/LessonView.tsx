@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { useAppStore } from "../../store/useAppStore";
+import { hasNotes } from "@/lib/notes";
+import { useAppStore } from "@/store/useAppStore";
 import { VideoPlayer } from "../player/VideoPlayer";
 import { LectureBar } from "./LectureBar";
 import { NotesPanel } from "./NotesPanel";
@@ -11,6 +12,8 @@ export function LessonView() {
 
   const lesson = activeLessonId ? lessonsById[activeLessonId] : null;
   const notes = lesson ? notesByLessonId[lesson.id] : null;
+  const hasVideo = Boolean(lesson?.video);
+  const notesExist = hasNotes(notes);
 
   useEffect(() => {
     if (!activeLessonId) return;
@@ -21,8 +24,10 @@ export function LessonView() {
   if (!lesson) {
     return (
       <div>
-        <div className="grid place-items-center gap-1.5 p-6 text-center text-[#d1d7dc]">
-          <strong className="text-base text-white">No lectures in this course</strong>
+        <div className="grid place-items-center gap-1.5 p-6 text-center text-muted">
+          <strong className="text-base text-foreground">
+            No lectures in this course
+          </strong>
           <span>Add lessons to the course package to get started.</span>
         </div>
       </div>
@@ -31,15 +36,17 @@ export function LessonView() {
 
   return (
     <div>
-      <VideoPlayer />
-      {!lesson.video && (
-        <div className="grid place-items-center gap-1.5 p-6 text-center text-[#d1d7dc]">
-          <strong className="text-base text-white">No video for this lecture</strong>
-          <span>Notes are still available below.</span>
-        </div>
-      )}
+      {hasVideo ? <VideoPlayer /> : null}
       <LectureBar />
-      <NotesPanel markdown={notes} />
+      {notesExist ? <NotesPanel markdown={notes} /> : null}
+      {!hasVideo && !notesExist ? (
+        <div className="grid place-items-center gap-1.5 border-b border-border bg-elevated p-10 text-center text-muted">
+          <strong className="text-base text-foreground">
+            No video or notes for this lecture
+          </strong>
+          <span>Add a video path or notes to this lesson package.</span>
+        </div>
+      ) : null}
     </div>
   );
 }

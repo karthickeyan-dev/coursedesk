@@ -1,6 +1,7 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-/* Design tokens → Tailwind theme */
+/* Design tokens → Tailwind theme (product + shadcn semantic colors) */
 @theme {
   --color-bg: var(--bg);
   --color-elevated: var(--bg-elevated);
@@ -26,10 +27,30 @@
   --color-code-fg: var(--code-fg);
   --color-code-border: var(--code-border);
   --color-code-lang: var(--code-lang);
+
+  /* shadcn semantic palette (bridges to CourseDesk tokens) */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--bg-elevated);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--bg-elevated);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--btn-primary);
+  --color-primary-foreground: var(--btn-primary-fg);
+  --color-secondary: var(--btn-secondary-bg);
+  --color-secondary-foreground: var(--btn-secondary-fg);
+  --color-muted-foreground: var(--muted-2);
+  --color-accent-foreground: #ffffff;
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: #ffffff;
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+
   --font-sans: var(--font);
   --font-mono: var(--mono);
   --radius-sm: 4px;
   --radius-md: 8px;
+  --radius-lg: 0.5rem;
   --shadow-card: var(--shadow);
   --shadow-pop: var(--shadow-lg);
   /* Fluid sidebar: narrow phones → tablets → desktop cap */
@@ -57,6 +78,14 @@
   --danger: #f05252;
   --check-border: #8b9198;
   --check-mark: #ffffff;
+  /* Buttons — Udemy-like primary / secondary in dark */
+  --btn-primary: #a435f0;
+  --btn-primary-hover: #8710d8;
+  --btn-primary-fg: #ffffff;
+  --btn-secondary-bg: transparent;
+  --btn-secondary-fg: #f7f9fa;
+  --btn-secondary-border: #f7f9fa;
+  --btn-secondary-hover: rgba(255, 255, 255, 0.08);
   --tb-bg: #1c1d1f;
   --tb-border: #3e4143;
   --tb-text: #f7f9fa;
@@ -70,7 +99,7 @@
   --code-fg: #c9d1d9;
   --code-border: #30363d;
   --code-lang: #8b949e;
-  --font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
@@ -90,7 +119,16 @@
   --ok-soft: rgba(25, 135, 84, 0.12);
   --danger: #dc3545;
   --check-border: #8a8f94;
+  /* Always white on filled green rings (never inherit light-theme text) */
   --check-mark: #ffffff;
+  /* Buttons — Udemy-like primary / secondary in light */
+  --btn-primary: #a435f0;
+  --btn-primary-hover: #8710d8;
+  --btn-primary-fg: #ffffff;
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-fg: #1c1d1f;
+  --btn-secondary-border: #1c1d1f;
+  --btn-secondary-hover: #f1f2f3;
   --shadow: 0 2px 8px rgba(28, 29, 31, 0.08);
   --shadow-lg: 0 12px 28px rgba(28, 29, 31, 0.12);
   --lib-glow-1: rgba(164, 53, 240, 0.1);
@@ -144,10 +182,10 @@ body {
   scrollbar-color: color-mix(in srgb, var(--muted-2) 55%, transparent) transparent;
 }
 
+/* font inherit only — do not set color here (unlayered rules beat Tailwind text-* utilities) */
 button,
 input {
   font: inherit;
-  color: inherit;
 }
 
 button {
@@ -273,20 +311,6 @@ button {
   border-radius: 50%;
   background: #fff;
   border: 0;
-}
-
-/* Curriculum sidebar completion rings — force SVG stroke visibility */
-.curriculum-check svg {
-  display: block;
-  flex: none;
-  stroke: currentColor;
-  color: inherit;
-}
-.curriculum-check.is-done {
-  color: var(--check-mark);
-}
-.curriculum-check.is-partial {
-  color: var(--ok);
 }
 
 /* Sidebar width across breakpoints (overlay < 980px uses same token) */

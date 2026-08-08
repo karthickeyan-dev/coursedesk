@@ -1,5 +1,13 @@
 import { FolderOpen, RefreshCw } from "lucide-react";
-import { PACKAGING_GUIDE_FILENAME } from "../../lib/course-packaging-guide";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { PACKAGING_GUIDE_FILENAME } from "@/lib/course-packaging-guide";
 
 export type EmptyCoursesKind =
   | "no-folder"
@@ -17,12 +25,6 @@ interface EmptyCoursesStateProps {
   onAllowAccess?: () => void;
   onRescan?: () => void;
 }
-
-const btn =
-  "inline-flex items-center justify-center gap-2 rounded-sm border border-border bg-panel px-4 py-2.5 text-[13px] font-bold leading-tight text-text transition-colors hover:border-border-strong hover:bg-panel-2 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-const btnPrimary =
-  "border-accent bg-accent text-white hover:border-accent-hover hover:bg-accent-hover hover:text-white";
-const btnGhost = "bg-transparent hover:bg-text/6";
 
 export function EmptyCoursesState({
   kind,
@@ -71,101 +73,97 @@ export function EmptyCoursesState({
         </p>
 
         {error && kind !== "error" ? (
-          <p className="mt-3 mb-0 rounded-sm border border-[color-mix(in_srgb,#e74c3c_35%,var(--border))] bg-[color-mix(in_srgb,#e74c3c_12%,var(--panel))] px-3 py-2.5 text-[0.9rem] leading-snug text-text">
-            {error}
-          </p>
+          <Alert variant="destructive" className="mt-3">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         ) : null}
 
         <div className="mt-[22px] mb-7 flex flex-wrap gap-2.5">
           {kind === "needs-permission" && onAllowAccess ? (
-            <button
-              type="button"
-              className={`${btn} ${btnPrimary}`}
-              disabled={busy}
-              onClick={onAllowAccess}
-            >
+            <Button type="button" disabled={busy} onClick={onAllowAccess}>
               <RefreshCw size={16} aria-hidden />
               Allow access
-            </button>
+            </Button>
           ) : null}
           {kind === "no-courses" && onRescan ? (
-            <button
-              type="button"
-              className={`${btn} ${btnPrimary}`}
-              disabled={busy}
-              onClick={onRescan}
-            >
+            <Button type="button" disabled={busy} onClick={onRescan}>
               <RefreshCw size={16} aria-hidden />
               Rescan folder
-            </button>
+            </Button>
           ) : null}
           {kind !== "unsupported" ? (
-            <button
+            <Button
               type="button"
-              className={`${btn} ${kind === "no-folder" || kind === "error" ? btnPrimary : btnGhost}`}
+              variant={
+                kind === "no-folder" || kind === "error" ? "default" : "secondary"
+              }
               disabled={busy}
               onClick={onChooseFolder}
             >
               <FolderOpen size={16} aria-hidden />
               {kind === "no-folder" ? "Choose courses folder" : "Change folder"}
-            </button>
+            </Button>
           ) : null}
         </div>
 
-        <div className="mt-2 rounded-md border border-border bg-elevated px-5 pt-5 pb-4.5 shadow-card">
-          <h3 className="m-0 mb-3 text-[0.85rem] font-bold tracking-[0.04em] text-muted uppercase">
-            Expected layout
-          </h3>
-          <pre className="mb-3.5 overflow-x-auto rounded-lg border border-border bg-code-bg px-4 py-3.5 font-mono text-xs leading-relaxed whitespace-pre text-code-fg">{`<courses-root>/
+        <Card className="mt-2 border-border bg-elevated shadow-card">
+          <CardHeader className="space-y-0 px-5 pt-5 pb-0">
+            <CardTitle className="text-[0.85rem] font-bold tracking-[0.04em] text-muted uppercase">
+              Expected layout
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-5 pt-3 pb-4.5">
+            <pre className="mb-3.5 overflow-x-auto rounded-lg border border-border bg-code-bg px-4 py-3.5 font-mono text-xs leading-relaxed whitespace-pre text-code-fg">{`<courses-root>/
   ${PACKAGING_GUIDE_FILENAME}
   <course-id>/
     course.js      required
     notes.js       optional
     videos/
     assets/`}</pre>
-          <ul className="m-0 list-disc space-y-1.5 pl-[1.15rem] text-[0.9rem] leading-relaxed text-muted">
-            <li>
-              Each course is a <strong className="text-text">subfolder</strong>{" "}
-              with a{" "}
-              <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
-                course.js
-              </code>{" "}
-              file
-            </li>
-            <li>
-              Folder name, course{" "}
-              <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
-                id
-              </code>
-              , and{" "}
-              <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
-                COURSES
-              </code>{" "}
-              key must match (kebab-case)
-            </li>
-            <li>
-              Video paths are relative (e.g.{" "}
-              <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
-                videos/001-welcome.mp4
-              </code>
-              )
-            </li>
-            <li>
-              Keep lesson{" "}
-              <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
-                id
-              </code>
-              s stable — progress is stored by id
-            </li>
-            <li>
-              For AI packaging, open this folder in your editor and follow{" "}
-              <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
-                {PACKAGING_GUIDE_FILENAME}
-              </code>{" "}
-              (written on first folder pick; restore anytime from Settings)
-            </li>
-          </ul>
-        </div>
+            <ul className="m-0 list-disc space-y-1.5 pl-[1.15rem] text-[0.9rem] leading-relaxed text-muted">
+              <li>
+                Each course is a <strong className="text-text">subfolder</strong>{" "}
+                with a{" "}
+                <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
+                  course.js
+                </code>{" "}
+                file
+              </li>
+              <li>
+                Folder name, course{" "}
+                <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
+                  id
+                </code>
+                , and{" "}
+                <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
+                  COURSES
+                </code>{" "}
+                key must match (kebab-case)
+              </li>
+              <li>
+                Video paths are relative (e.g.{" "}
+                <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
+                  videos/001-welcome.mp4
+                </code>
+                )
+              </li>
+              <li>
+                Keep lesson{" "}
+                <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
+                  id
+                </code>
+                s stable — progress is stored by id
+              </li>
+              <li>
+                For AI packaging, open this folder in your editor and follow{" "}
+                <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
+                  {PACKAGING_GUIDE_FILENAME}
+                </code>{" "}
+                (written on first folder pick; restore anytime from Settings)
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

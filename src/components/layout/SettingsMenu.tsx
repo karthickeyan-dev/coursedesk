@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useState } from "react";
 import {
   Download,
   FileText,
@@ -7,49 +7,36 @@ import {
   RefreshCw,
   Settings,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   clearLinkedFolder,
   reauthorizeAndLoadCourses,
   rescanCoursesFolder,
   selectAndLoadCoursesFolder,
-} from "../../lib/course-loader";
+} from "@/lib/course-loader";
 import {
   downloadPackagingGuide,
   writePackagingGuide,
-} from "../../lib/local-courses";
-import { applyCoursesResult } from "../../store/boot";
-import { useAppStore } from "../../store/useAppStore";
-import { iconBtn } from "./Topbar";
-
-const menuItem =
-  "flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2.5 text-left text-[13px] font-semibold text-text hover:bg-panel-2 disabled:cursor-not-allowed disabled:opacity-40";
+} from "@/lib/local-courses";
+import { applyCoursesResult } from "@/store/boot";
+import { useAppStore } from "@/store/useAppStore";
 
 export function SettingsMenu() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const panelId = useId();
-  const rootRef = useRef<HTMLDivElement>(null);
 
   const folderName = useAppStore((s) => s.folderName);
   const coursesPhase = useAppStore((s) => s.coursesPhase);
   const folderStatus = useAppStore((s) => s.folderStatus);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDoc);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
 
   async function run(action: () => Promise<void>, okMsg?: string) {
     setBusy(true);
@@ -69,179 +56,179 @@ export function SettingsMenu() {
     coursesPhase === "ready" ||
     coursesPhase === "needs-permission";
 
+  /** Keep menu open so status messages remain visible after actions. */
+  const keepOpen = (e: Event) => {
+    e.preventDefault();
+  };
+
   return (
-    <div className="relative" ref={rootRef}>
-      <button
-        type="button"
-        className={iconBtn}
-        title="Settings"
-        aria-label="Settings"
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={() => {
-          setOpen((v) => !v);
-          setMessage(null);
-        }}
-      >
-        <Settings size={18} strokeWidth={2} />
-      </button>
-      {open ? (
-        <div
-          id={panelId}
-          className="absolute top-[calc(100%+8px)] right-0 z-[60] flex w-[min(300px,calc(100vw-24px))] flex-col gap-1 rounded-md border border-border bg-elevated p-2.5 text-text shadow-pop"
-          role="menu"
+    <DropdownMenu
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setMessage(null);
+      }}
+    >
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="rounded-full text-tb-text hover:bg-tb-hover hover:text-tb-text focus-visible:ring-offset-tb"
+          title="Settings"
+          aria-label="Settings"
         >
-          <div className="mb-1 flex flex-col gap-0.5 border-b border-border px-2 pt-1.5 pb-2.5">
-            <span className="text-[11px] font-bold tracking-[0.06em] text-muted-2 uppercase">
-              Courses folder
-            </span>
-            <span
-              className="truncate text-[13px] font-semibold text-text"
-              title={folderName || undefined}
-            >
-              {folderName ? folderName : "Not selected"}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className={menuItem}
-            role="menuitem"
-            disabled={busy}
-            onClick={() =>
-              void run(async () => {
-                const state = await selectAndLoadCoursesFolder();
-                applyCoursesResult(state);
-                if (state.wroteGuide) {
-                  setMessage("Folder linked. COURSE_TEMPLATE.md saved.");
-                } else if (state.phase === "ready") {
-                  setMessage(
-                    state.courses.length
-                      ? `Loaded ${state.courses.length} course(s).`
-                      : "Folder linked. No courses found yet."
-                  );
-                } else if (state.error) {
-                  setMessage(state.error);
-                }
-              })
-            }
+          <Settings className="size-[18px]" strokeWidth={2} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-[min(300px,calc(100vw-24px))] border-0 shadow-pop"
+        sideOffset={8}
+      >
+        <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
+          <span className="text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
+            Courses folder
+          </span>
+          <span
+            className="truncate text-sm font-medium"
+            title={folderName || undefined}
           >
-            <FolderOpen size={16} aria-hidden />
-            {folderName ? "Change folder…" : "Choose folder…"}
-          </button>
+            {folderName ? folderName : "Not selected"}
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
 
-          {coursesPhase === "needs-permission" ? (
-            <button
-              type="button"
-              className={menuItem}
-              role="menuitem"
-              disabled={busy}
-              onClick={() =>
-                void run(async () => {
-                  const state = await reauthorizeAndLoadCourses();
-                  applyCoursesResult(state);
-                  setMessage(
-                    state.phase === "ready"
-                      ? "Access granted."
-                      : state.error || "Still needs permission."
-                  );
-                })
+        <DropdownMenuItem
+          disabled={busy}
+          onSelect={(e) => {
+            keepOpen(e);
+            void run(async () => {
+              const state = await selectAndLoadCoursesFolder();
+              applyCoursesResult(state);
+              if (state.wroteGuide) {
+                setMessage("Folder linked. COURSE_TEMPLATE.md saved.");
+              } else if (state.phase === "ready") {
+                setMessage(
+                  state.courses.length
+                    ? `Loaded ${state.courses.length} course(s).`
+                    : "Folder linked. No courses found yet."
+                );
+              } else if (state.error) {
+                setMessage(state.error);
               }
-            >
-              <RefreshCw size={16} aria-hidden />
-              Allow access…
-            </button>
-          ) : null}
+            });
+          }}
+        >
+          <FolderOpen className="size-4" aria-hidden />
+          {folderName ? "Change folder…" : "Choose folder…"}
+        </DropdownMenuItem>
 
-          <button
-            type="button"
-            className={menuItem}
-            role="menuitem"
-            disabled={busy || !folderName || coursesPhase === "needs-permission"}
-            onClick={() =>
+        {coursesPhase === "needs-permission" ? (
+          <DropdownMenuItem
+            disabled={busy}
+            onSelect={(e) => {
+              keepOpen(e);
               void run(async () => {
-                const state = await rescanCoursesFolder();
+                const state = await reauthorizeAndLoadCourses();
                 applyCoursesResult(state);
                 setMessage(
                   state.phase === "ready"
-                    ? `Rescanned — ${state.courses.length} course(s).`
-                    : state.error || "Rescan finished."
+                    ? "Access granted."
+                    : state.error || "Still needs permission."
                 );
-              })
-            }
-          >
-            <RefreshCw size={16} aria-hidden />
-            Rescan folder
-          </button>
-
-          <button
-            type="button"
-            className={menuItem}
-            role="menuitem"
-            disabled={busy || !folderName}
-            onClick={() =>
-              void run(async () => {
-                try {
-                  await writePackagingGuide();
-                  setMessage("Saved COURSE_TEMPLATE.md to the folder.");
-                } catch {
-                  downloadPackagingGuide();
-                  setMessage(
-                    "Could not write to folder — downloaded COURSE_TEMPLATE.md instead."
-                  );
-                }
-              })
-            }
-          >
-            <FileText size={16} aria-hidden />
-            Save packaging guide
-          </button>
-
-          <button
-            type="button"
-            className={menuItem}
-            role="menuitem"
-            disabled={busy}
-            onClick={() => {
-              downloadPackagingGuide();
-              setMessage("Downloaded COURSE_TEMPLATE.md.");
+              });
             }}
           >
-            <Download size={16} aria-hidden />
-            Download packaging guide
-          </button>
+            <RefreshCw className="size-4" aria-hidden />
+            Allow access…
+          </DropdownMenuItem>
+        ) : null}
 
-          {linked ? (
-            <button
-              type="button"
-              className={`${menuItem} text-danger`}
-              role="menuitem"
+        <DropdownMenuItem
+          disabled={busy || !folderName || coursesPhase === "needs-permission"}
+          onSelect={(e) => {
+            keepOpen(e);
+            void run(async () => {
+              const state = await rescanCoursesFolder();
+              applyCoursesResult(state);
+              setMessage(
+                state.phase === "ready"
+                  ? `Rescanned — ${state.courses.length} course(s).`
+                  : state.error || "Rescan finished."
+              );
+            });
+          }}
+        >
+          <RefreshCw className="size-4" aria-hidden />
+          Rescan folder
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={busy || !folderName}
+          onSelect={(e) => {
+            keepOpen(e);
+            void run(async () => {
+              try {
+                await writePackagingGuide();
+                setMessage("Saved COURSE_TEMPLATE.md to the folder.");
+              } catch {
+                downloadPackagingGuide();
+                setMessage(
+                  "Could not write to folder — downloaded COURSE_TEMPLATE.md instead."
+                );
+              }
+            });
+          }}
+        >
+          <FileText className="size-4" aria-hidden />
+          Save packaging guide
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={busy}
+          onSelect={(e) => {
+            keepOpen(e);
+            downloadPackagingGuide();
+            setMessage("Downloaded COURSE_TEMPLATE.md.");
+          }}
+        >
+          <Download className="size-4" aria-hidden />
+          Download packaging guide
+        </DropdownMenuItem>
+
+        {linked ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
               disabled={busy}
-              onClick={() =>
+              className="text-destructive focus:text-destructive"
+              onSelect={(e) => {
+                keepOpen(e);
                 void run(async () => {
                   const state = await clearLinkedFolder();
                   applyCoursesResult(state);
                   setMessage("Folder link cleared.");
-                })
-              }
+                });
+              }}
             >
-              <FolderX size={16} aria-hidden />
+              <FolderX className="size-4" aria-hidden />
               Clear folder link
-            </button>
-          ) : null}
+            </DropdownMenuItem>
+          </>
+        ) : null}
 
-          {folderStatus && !folderStatus.supported ? (
-            <p className="mx-1 mt-1.5 mb-0.5 text-xs leading-snug text-muted">
-              Use Chrome or Edge on desktop for local folders.
-            </p>
-          ) : null}
-          {message ? (
-            <p className="mx-1 mt-1.5 mb-0.5 text-xs leading-snug text-muted">
-              {message}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
+        {folderStatus && !folderStatus.supported ? (
+          <p className="px-2 py-1.5 text-xs leading-snug text-muted-foreground">
+            Use Chrome or Edge on desktop for local folders.
+          </p>
+        ) : null}
+        {message ? (
+          <p className="px-2 py-1.5 text-xs leading-snug text-muted-foreground">
+            {message}
+          </p>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

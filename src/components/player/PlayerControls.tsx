@@ -7,6 +7,8 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   PLAYBACK_RATES,
   type PlayerUiState,
@@ -18,14 +20,17 @@ interface Props {
   api: UseVideoPlayerApi;
 }
 
-/** Shared control-button chrome — keeps every icon hit-target aligned. */
-const pcBtn =
-  "grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-[#f7f9fa] transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(164,53,240,0.55)]";
+/** Shared time label style — current + duration stay the same size. */
+const timeClass =
+  "m-0 min-w-[3.25rem] shrink-0 border-0 bg-transparent p-0 text-left text-xs font-normal leading-none text-[#d1d7dc] tabular-nums";
+
+const iconBtnClass =
+  "h-9 w-9 shrink-0 rounded-md text-[#f7f9fa] hover:bg-white/10 hover:text-white";
 
 const iconProps = {
   size: 20 as const,
   strokeWidth: 2 as const,
-  className: "block",
+  className: "block size-5",
   "aria-hidden": true as const,
 };
 
@@ -50,10 +55,12 @@ export function PlayerControls({ ui, api }: Props) {
         : Volume2;
 
   return (
-    <div className="player-controls box-border flex w-full shrink-0 items-center gap-1.5 border-t border-[#2a2a2a] bg-[#141414] px-2.5 py-2 text-[#f7f9fa] sm:gap-2.5 sm:px-3.5 sm:py-2.5">
-      <button
+    <div className="player-controls box-border flex w-full shrink-0 items-center gap-1.5 border-t border-[#2a2a2a] bg-[#141414] px-2.5 py-2 text-[#f7f9fa] sm:gap-2 sm:px-3.5 sm:py-2.5">
+      <Button
         type="button"
-        className={pcBtn}
+        variant="ghost"
+        size="icon"
+        className={iconBtnClass}
         aria-label={ui.playing ? "Pause" : "Play"}
         onClick={() => api.togglePlayPause(false)}
       >
@@ -62,11 +69,9 @@ export function PlayerControls({ ui, api }: Props) {
         ) : (
           <Play {...iconProps} fill="currentColor" />
         )}
-      </button>
+      </Button>
 
-      <div className="min-w-10 shrink-0 text-xs text-[#d1d7dc] tabular-nums">
-        {api.formatTime(ui.currentTime)}
-      </div>
+      <span className={timeClass}>{api.formatTime(ui.currentTime)}</span>
 
       <input
         type="range"
@@ -82,7 +87,10 @@ export function PlayerControls({ ui, api }: Props) {
 
       <button
         type="button"
-        className="m-0 min-w-11 shrink-0 cursor-pointer appearance-none rounded-sm border-0 bg-transparent p-0 text-left text-xs text-[#d1d7dc] tabular-nums hover:text-white focus:outline-none focus-visible:rounded-sm focus-visible:shadow-[0_0_0_2px_rgba(164,53,240,0.45)]"
+        className={cn(
+          timeClass,
+          "cursor-pointer rounded-sm hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        )}
         aria-label={
           ui.showRemaining ? "Show total duration" : "Show remaining time"
         }
@@ -111,26 +119,32 @@ export function PlayerControls({ ui, api }: Props) {
             onChange={(e) => api.volumeFromBar(Number(e.target.value))}
           />
         </div>
-        <button
+        <Button
           type="button"
-          className={pcBtn}
+          variant="ghost"
+          size="icon"
+          className={iconBtnClass}
           aria-label={ui.muted ? "Unmute" : "Mute"}
           onClick={() => api.toggleMute(false)}
         >
           <VolumeIcon {...iconProps} />
-        </button>
+        </Button>
       </div>
 
       <div className="group relative shrink-0">
-        <button
+        <Button
           type="button"
-          className={`${pcBtn} min-w-10 text-xs font-semibold tracking-wide tabular-nums`}
+          variant="ghost"
+          className={cn(
+            iconBtnClass,
+            "min-w-10 px-1.5 text-xs font-medium tracking-wide tabular-nums"
+          )}
           aria-label="Playback speed"
           aria-haspopup="listbox"
           title={`Playback speed ${api.formatRate(ui.rate)}`}
         >
           {api.formatRate(ui.rate)}
-        </button>
+        </Button>
         <div
           className="absolute right-0 bottom-[calc(100%+6px)] z-[6] hidden min-w-[72px] gap-0.5 rounded-lg border border-[#3e4143] bg-[#1c1d1f] py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)] after:absolute after:top-full after:right-0 after:left-0 after:h-2 after:content-[''] group-hover:grid group-focus-within:grid"
           role="listbox"
@@ -140,12 +154,11 @@ export function PlayerControls({ ui, api }: Props) {
             <button
               key={rate}
               type="button"
-              className={[
+              className={cn(
                 "w-full cursor-pointer appearance-none border-0 bg-transparent px-3.5 py-2 text-left text-xs font-medium text-[#d1d7dc] tabular-nums hover:bg-white/8 hover:text-white",
-                Math.abs(rate - ui.rate) < 0.001
-                  ? "bg-[rgba(164,53,240,0.22)] text-white"
-                  : "",
-              ].join(" ")}
+                Math.abs(rate - ui.rate) < 0.001 &&
+                  "bg-primary/25 text-white"
+              )}
               role="option"
               data-rate={rate}
               aria-selected={Math.abs(rate - ui.rate) < 0.001}
@@ -157,9 +170,11 @@ export function PlayerControls({ ui, api }: Props) {
         </div>
       </div>
 
-      <button
+      <Button
         type="button"
-        className={pcBtn}
+        variant="ghost"
+        size="icon"
+        className={iconBtnClass}
         aria-label={ui.fullscreen ? "Exit fullscreen" : "Fullscreen"}
         title={ui.fullscreen ? "Exit fullscreen" : "Fullscreen"}
         onClick={() => api.toggleFullscreen(false)}
@@ -169,7 +184,7 @@ export function PlayerControls({ ui, api }: Props) {
         ) : (
           <Maximize {...iconProps} />
         )}
-      </button>
+      </Button>
     </div>
   );
 }

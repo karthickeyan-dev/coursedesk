@@ -20,11 +20,13 @@ For packaging **course content** on disk, use `COURSE_TEMPLATE.md` inside the us
 | Layer | Choice |
 |-------|--------|
 | Tooling | Vite 6, TypeScript, **pnpm** |
-| UI | React 19, Zustand |
-| Styles | Tailwind v4 utilities + `src/styles/styles.css` (tokens, prose, player ranges) |
+| UI | React 19, Zustand, **shadcn/ui** (`src/components/ui/*`) |
+| Styles | Tailwind v4 + `src/styles/styles.css` (product tokens, shadcn bridge, prose, player) |
 | Notes | `marked` + `highlight.js` |
 | Icons | `lucide-react` |
 | Courses | `src/lib/local-courses.ts` + `course-loader.ts` |
+
+Prefer `@/components/ui/*` for chrome (Button, DropdownMenu, Tabs, Checkbox, etc.). Keep the video player, course-card media, notes prose, and progress ring custom.
 
 ### Commands
 
@@ -46,24 +48,27 @@ pnpm test
 ```text
 src/
   components/
+    ui/            # shadcn primitives (Button, DropdownMenu, Tabs, …)
     library/       # course grid, empty / first-run states
     lesson/        # lecture bar, notes
     curriculum/    # sidebar content + files
-    player/        # video + controls
+    player/        # video + controls (domain UI — not shadcn)
     layout/        # topbar, settings, progress
   store/           # Zustand (useAppStore), boot, selectors
   lib/
+    utils.ts                  # cn() for shadcn class merge
     local-courses.ts          # folder pick, scan, scripts, blob URLs
     fs-handle-store.ts        # IndexedDB for FileSystemDirectoryHandle
     course-loader.ts          # boot / select / rescan / clear flows
     course-packaging-guide.ts # filename + load/download helpers
-public/
-  COURSE_TEMPLATE.md          # packaging guide (static asset)
     storage.ts                # coursedesk.* localStorage only
     assets.ts                 # resolveCourseAssetUrl, library helpers
     notes.ts, format.ts
   styles/styles.css
   types/course.ts
+public/
+  COURSE_TEMPLATE.md          # packaging guide (static asset)
+components.json               # shadcn config
 netlify.toml                  # static deploy + SPA redirect
 ```
 

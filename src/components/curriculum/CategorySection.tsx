@@ -1,13 +1,17 @@
-import { Check, ChevronRight } from "lucide-react";
-import { sumLessonDurations } from "../../lib/assets";
-import { formatDurationTotal } from "../../lib/format";
-import type { Category, Lesson } from "../../types/course";
-import { isLessonFinished } from "../../store/selectors";
-import { useAppStore } from "../../store/useAppStore";
+import { ChevronRight } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { sumLessonDurations } from "@/lib/assets";
+import { formatDurationTotal } from "@/lib/format";
+import type { Category, Lesson } from "@/types/course";
+import { isLessonFinished } from "@/store/selectors";
+import { useAppStore } from "@/store/useAppStore";
+import { cn } from "@/lib/utils";
+import { CompletionCheck } from "@/components/ui/completion-check";
 import { LessonButton } from "./LessonButton";
-
-const checkBase =
-  "curriculum-check mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 border-[var(--check-border)] bg-transparent transition-[border-color,background-color,color] duration-100";
 
 export function CategorySection({
   category,
@@ -34,67 +38,57 @@ export function CategorySection({
     ? `${done}/${lessons.length} · ${formatDurationTotal(seconds)}`
     : `${done}/${lessons.length}`;
 
+  const checkState = allDone ? true : someDone ? "indeterminate" : false;
+
   return (
-    <div className="border-b border-border" data-category-id={category.id}>
-      <button
-        type="button"
-        className="grid w-full grid-cols-[22px_1fr_auto] items-start gap-2.5 border-0 bg-panel-2 px-4 py-3.5 pr-4 pl-3.5 text-left text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]"
-        aria-expanded={isOpen}
-        onClick={() => setOpenCategory(isOpen ? null : category.id)}
-      >
-        <span
-          className={[
-            checkBase,
-            allDone
-              ? "is-done border-ok bg-ok text-white"
-              : someDone
-                ? "is-partial border-ok bg-[color-mix(in_srgb,var(--ok)_22%,var(--panel-2))] text-ok"
-                : "text-transparent hover:border-[color-mix(in_srgb,var(--check-border)_45%,var(--text))]",
-          ].join(" ")}
-          role="checkbox"
-          aria-checked={allDone ? "true" : someDone ? "mixed" : "false"}
+    <Collapsible
+      open={isOpen}
+      onOpenChange={(open) => setOpenCategory(open ? category.id : null)}
+      className="block w-full border-b border-border"
+      data-category-id={category.id}
+    >
+      <div className="grid w-full grid-cols-[22px_1fr_auto] items-start gap-2.5 bg-panel-2 px-4 py-3.5 pr-4 pl-3.5 text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]">
+        <CompletionCheck
+          className="mt-0.5"
+          checked={checkState}
           title={allDone ? "Mark section incomplete" : "Mark section complete"}
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleSectionFinished(lessons.map((l) => l.id));
-          }}
-        >
-          {allDone || someDone ? (
-            <Check
-              size={12}
-              strokeWidth={3}
-              absoluteStrokeWidth
-              className="block"
-              color="currentColor"
-              aria-hidden
-            />
-          ) : null}
-        </span>
-        <span className="flex min-w-0 flex-col gap-1">
-          <span className="text-sm leading-snug font-bold">
-            Section {sectionNumber}: {category.title}
-          </span>
-          <span className="text-left text-xs font-medium text-muted-2 tabular-nums">
-            {metaText}
-          </span>
-        </span>
-        <span className="mt-0.5 grid place-items-center">
-          <ChevronRight
-            size={16}
-            strokeWidth={2}
-            className={[
-              "block text-muted-2 transition-transform duration-150",
-              isOpen ? "rotate-90" : "",
-            ].join(" ")}
-            aria-hidden
-          />
-        </span>
-      </button>
-      <div className={isOpen ? "block bg-elevated" : "hidden"}>
+          onClick={(e) => e.stopPropagation()}
+          onCheckedChange={() =>
+            toggleSectionFinished(lessons.map((l) => l.id))
+          }
+        />
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="col-span-2 grid w-full min-w-0 grid-cols-[1fr_auto] items-start gap-2.5 border-0 bg-transparent p-0 text-left text-inherit"
+          >
+            <span className="flex min-w-0 flex-col gap-1">
+              <span className="text-sm leading-snug font-semibold">
+                Section {sectionNumber}: {category.title}
+              </span>
+              <span className="text-left text-xs font-medium text-muted-2 tabular-nums">
+                {metaText}
+              </span>
+            </span>
+            <span className="mt-0.5 grid place-items-center">
+              <ChevronRight
+                size={16}
+                strokeWidth={2}
+                className={cn(
+                  "block text-muted-2 transition-transform duration-150",
+                  isOpen && "rotate-90"
+                )}
+                aria-hidden
+              />
+            </span>
+          </button>
+        </CollapsibleTrigger>
+      </div>
+      <CollapsibleContent className="block w-full bg-elevated">
         {lessons.map((lesson) => (
           <LessonButton key={lesson.id} lesson={lesson} />
         ))}
-      </div>
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

@@ -1,8 +1,13 @@
 import { Check, Clock, Layers } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
-import { formatDurationTotal } from "../../lib/format";
-import { progressAriaLabel, selectProgressStats } from "../../store/selectors";
-import { useAppStore } from "../../store/useAppStore";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { formatDurationTotal } from "@/lib/format";
+import { progressAriaLabel, selectProgressStats } from "@/store/selectors";
+import { useAppStore } from "@/store/useAppStore";
 
 export function ProgressPill() {
   const stats = useAppStore(useShallow(selectProgressStats));
@@ -19,11 +24,10 @@ export function ProgressPill() {
   const empty = total === 0;
   const fmt = formatDurationTotal;
 
-  return (
+  const trigger = (
     <div
-      className="group relative flex cursor-default items-center gap-2 rounded-full px-2.5 py-1 text-[13px] font-semibold text-tb-text outline-none hover:bg-tb-hover focus-visible:bg-tb-hover"
+      className="flex cursor-default items-center gap-2 rounded-full px-2.5 py-1 text-sm font-medium text-tb-text outline-none hover:bg-tb-hover focus-visible:bg-tb-hover"
       tabIndex={0}
-      aria-describedby="progressDropdown"
       title={overall ? "Overall progress" : "Course progress"}
       aria-label={progressAriaLabel(stats)}
     >
@@ -43,33 +47,59 @@ export function ProgressPill() {
       <span className="max-[560px]:hidden">
         {overall ? `${percent}% overall` : `${percent}% complete`}
       </span>
-      <div
-        id="progressDropdown"
-        role="tooltip"
-        className={[
-          "absolute top-[calc(100%+10px)] right-0 z-50 hidden rounded-md border border-border bg-elevated p-3 text-text shadow-pop",
-          empty ? "" : "group-hover:block group-focus-within:block",
-        ].join(" ")}
+    </div>
+  );
+
+  if (empty) return trigger;
+
+  return (
+    <HoverCard openDelay={120} closeDelay={80}>
+      <HoverCardTrigger asChild>{trigger}</HoverCardTrigger>
+      <HoverCardContent
+        align="end"
+        sideOffset={10}
+        className="w-auto border-border bg-elevated p-3 text-text shadow-pop"
       >
         <table className="border-collapse whitespace-nowrap text-xs tabular-nums">
           <thead>
             <tr>
               <th scope="col" className="w-px px-0.5" />
-              <th scope="col" className="border-b border-border px-3 pb-2 text-right text-[11px] font-semibold text-muted-2">
+              <th
+                scope="col"
+                className="border-b border-border px-3 pb-2 text-right text-[11px] font-semibold text-muted-2"
+              >
                 <span className="inline-flex items-center justify-end gap-1.5">
-                  <Layers className="block shrink-0 text-muted-2" size={14} aria-hidden />
+                  <Layers
+                    className="block shrink-0 text-muted-2"
+                    size={14}
+                    aria-hidden
+                  />
                   Total
                 </span>
               </th>
-              <th scope="col" className="border-b border-border px-3 pb-2 text-right text-[11px] font-semibold text-muted-2">
+              <th
+                scope="col"
+                className="border-b border-border px-3 pb-2 text-right text-[11px] font-semibold text-muted-2"
+              >
                 <span className="inline-flex items-center justify-end gap-1.5">
-                  <Check className="block shrink-0 text-muted-2" size={14} aria-hidden />
+                  <Check
+                    className="block shrink-0 text-muted-2"
+                    size={14}
+                    aria-hidden
+                  />
                   Completed
                 </span>
               </th>
-              <th scope="col" className="border-b border-border px-3 pb-2 text-right text-[11px] font-semibold text-muted-2">
+              <th
+                scope="col"
+                className="border-b border-border px-3 pb-2 text-right text-[11px] font-semibold text-muted-2"
+              >
                 <span className="inline-flex items-center justify-end gap-1.5">
-                  <Clock className="block shrink-0 text-muted-2" size={14} aria-hidden />
+                  <Clock
+                    className="block shrink-0 text-muted-2"
+                    size={14}
+                    aria-hidden
+                  />
                   Remaining
                 </span>
               </th>
@@ -77,26 +107,42 @@ export function ProgressPill() {
           </thead>
           <tbody>
             <tr>
-              <th scope="row" className="pr-4 pl-0.5 text-left font-medium text-muted">
+              <th
+                scope="row"
+                className="pr-4 pl-0.5 text-left font-medium text-muted-foreground"
+              >
                 Lectures
               </th>
-              <td className="px-3 py-1.5 text-right font-bold text-text">{total}</td>
-              <td className="px-3 py-1.5 text-right font-bold text-text">{done}</td>
-              <td className="px-3 py-1.5 text-right font-bold text-text">{remaining}</td>
+              <td className="px-3 py-1.5 text-right font-semibold text-foreground">
+                {total}
+              </td>
+              <td className="px-3 py-1.5 text-right font-semibold text-foreground">
+                {done}
+              </td>
+              <td className="px-3 py-1.5 text-right font-semibold text-foreground">
+                {remaining}
+              </td>
             </tr>
             <tr>
-              <th scope="row" className="pr-4 pt-2.5 pl-0.5 text-left font-medium text-muted">
+              <th
+                scope="row"
+                className="pr-4 pt-2.5 pl-0.5 text-left font-medium text-muted-foreground"
+              >
                 Time
               </th>
-              <td className="px-3 pt-2.5 text-right font-bold text-text">{fmt(totalSeconds)}</td>
-              <td className="px-3 pt-2.5 text-right font-bold text-text">{fmt(doneSeconds)}</td>
-              <td className="px-3 pt-2.5 text-right font-bold text-text">
+              <td className="px-3 pt-2.5 text-right font-semibold text-foreground">
+                {fmt(totalSeconds)}
+              </td>
+              <td className="px-3 pt-2.5 text-right font-semibold text-foreground">
+                {fmt(doneSeconds)}
+              </td>
+              <td className="px-3 pt-2.5 text-right font-semibold text-foreground">
                 {fmt(remainingSeconds)}
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
-    </div>
+      </HoverCardContent>
+    </HoverCard>
   );
 }
