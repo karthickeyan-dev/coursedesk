@@ -34,7 +34,7 @@ export function ProgressPill() {
           />
         </svg>
       </div>
-      <span>
+      <span className="progress-pill-label">
         {overall ? `${percent}% overall` : `${percent}% complete`}
       </span>
       <div className="progress-dropdown" id="progressDropdown" role="tooltip">

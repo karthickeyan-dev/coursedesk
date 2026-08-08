@@ -1,99 +1,229 @@
 /**
- * Live course discovery + classic script-tag loading (IIFE packages).
- * Do not use import() for course.js — packages register on window.COURSES.
+ * Load courses from the user-selected local folder only.
+ * Packages register on window.COURSES via classic script evaluation.
  */
-import type { ManifestEntry } from "../types/course";
+import { buildAvailableCourses } from "./assets";
+import type { AvailableCourse } from "../types/course";
+import {
+  ensureFolderAccess,
+  getFolderStatus,
+  isFsAccessSupported,
+  loadCoursesFromFolder,
+  packagingGuideExists,
+  pickCoursesFolder,
+  restoreCoursesFolder,
+  type LocalFolderStatus,
+  unlinkCoursesFolder,
+  writePackagingGuide,
+} from "./local-courses";
 
-const DIR = "courses";
+export type CoursesBootPhase =
+  | "loading"
+  | "ready"
+  | "no-folder"
+  | "needs-permission"
+  | "unsupported"
+  | "error";
 
-let loadPromise: Promise<string[]> | null = null;
+export interface CoursesLoadState {
+  phase: CoursesBootPhase;
+  courses: AvailableCourse[];
+  folderName: string | null;
+  folderStatus: LocalFolderStatus;
+  error: string | null;
+  wroteGuide: boolean;
+}
 
-function loadScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = src;
-    s.async = false;
-    s.onload = () => resolve();
-    s.onerror = () => {
-      s.remove();
-      reject(new Error(`Failed to load ${src}`));
+function emptyStatus(supported: boolean): LocalFolderStatus {
+  return {
+    supported,
+    hasHandle: false,
+    folderName: null,
+    permission: "none",
+    canWrite: false,
+  };
+}
+
+async function finishWithFolder(
+  wroteGuide: boolean
+): Promise<CoursesLoadState> {
+  const { folderName } = await loadCoursesFromFolder();
+  const courses = buildAvailableCourses();
+  const folderStatus = await getFolderStatus();
+  return {
+    phase: "ready",
+    courses,
+    folderName,
+    folderStatus,
+    error: null,
+    wroteGuide,
+  };
+}
+
+/** Boot: restore handle if possible; do not prompt (prompt needs a user gesture). */
+export async function bootLocalCourses(): Promise<CoursesLoadState> {
+  if (!isFsAccessSupported()) {
+    return {
+      phase: "unsupported",
+      courses: [],
+      folderName: null,
+      folderStatus: emptyStatus(false),
+      error:
+        "Local folder access is not supported in this browser. Use Chrome or Edge on desktop.",
+      wroteGuide: false,
     };
-    document.head.appendChild(s);
-  });
-}
+  }
 
-function normalize(data: unknown): ManifestEntry[] {
-  if (!data) return [];
-  if (Array.isArray(data)) {
-    return data
-      .map((item) => {
-        if (typeof item === "string") return { id: item };
-        if (item && typeof item === "object" && "id" in item) {
-          const e = item as ManifestEntry;
-          return { id: String(e.id), hasNotes: e.hasNotes };
-        }
-        return null;
-      })
-      .filter((e): e is ManifestEntry => e != null);
-  }
-  if (typeof data === "object" && data && Array.isArray((data as { courses?: unknown }).courses)) {
-    return normalize((data as { courses: unknown[] }).courses);
-  }
-  return [];
-}
-
-function applyRoot(folderId: string): void {
-  const reg = window.COURSES || {};
-  const data = reg[folderId];
-  if (data) {
-    data.root = `${DIR}/${folderId}`;
-    if (!data.id) data.id = folderId;
-    return;
-  }
-  for (const [key, course] of Object.entries(reg)) {
-    if (!course?.root && (course.id === folderId || key === folderId)) {
-      course.root = `${DIR}/${folderId}`;
-    }
-  }
-}
-
-async function loadCoursesOnce(): Promise<string[]> {
-  let entries: ManifestEntry[] = [];
   try {
-    const res = await fetch(`${DIR}/manifest.json`, { cache: "no-store" });
-    if (res.ok) entries = normalize(await res.json());
-  } catch {
-    /* empty */
-  }
+    const handle = await restoreCoursesFolder();
+    if (!handle) {
+      return {
+        phase: "no-folder",
+        courses: [],
+        folderName: null,
+        folderStatus: emptyStatus(true),
+        error: null,
+        wroteGuide: false,
+      };
+    }
 
-  if (!entries.length) {
-    console.warn(
-      "[CourseDesk] No courses found. Add courses/<id>/course.js, then run: pnpm start"
-    );
-    return [];
-  }
+    const status = await getFolderStatus();
+    if (status.permission !== "granted") {
+      return {
+        phase: "needs-permission",
+        courses: [],
+        folderName: handle.name,
+        folderStatus: status,
+        error: null,
+        wroteGuide: false,
+      };
+    }
 
-  const loaded: string[] = [];
-  for (const { id, hasNotes } of entries) {
+    // Permission already granted — load without requesting again
+    return await finishWithFolder(false);
+  } catch (err) {
+    return {
+      phase: "error",
+      courses: [],
+      folderName: null,
+      folderStatus: await getFolderStatus().catch(() => emptyStatus(true)),
+      error: err instanceof Error ? err.message : "Failed to load courses",
+      wroteGuide: false,
+    };
+  }
+}
+
+/** User clicked “Choose folder” / “Change folder”. */
+export async function selectAndLoadCoursesFolder(): Promise<CoursesLoadState> {
+  try {
+    await pickCoursesFolder();
+    let wroteGuide = false;
     try {
-      await loadScript(`${DIR}/${id}/course.js`);
-      applyRoot(id);
-      if (hasNotes !== false) {
-        await loadScript(`${DIR}/${id}/notes.js`).catch(() => undefined);
+      const exists = await packagingGuideExists();
+      if (!exists) {
+        await writePackagingGuide();
+        wroteGuide = true;
       }
-      loaded.push(id);
     } catch (err) {
       console.warn(
-        `[CourseDesk] Skipping "${id}":`,
+        "[CourseDesk] Could not write COURSE_TEMPLATE.md:",
         err instanceof Error ? err.message : err
       );
     }
+    return await finishWithFolder(wroteGuide);
+  } catch (err) {
+    // User cancelled picker
+    if (err instanceof DOMException && err.name === "AbortError") {
+      const status = await getFolderStatus();
+      const phase: CoursesBootPhase = status.hasHandle
+        ? status.permission === "granted"
+          ? "ready"
+          : "needs-permission"
+        : "no-folder";
+      return {
+        phase,
+        courses: phase === "ready" ? buildAvailableCourses() : [],
+        folderName: status.folderName,
+        folderStatus: status,
+        error: null,
+        wroteGuide: false,
+      };
+    }
+    return {
+      phase: "error",
+      courses: [],
+      folderName: null,
+      folderStatus: await getFolderStatus().catch(() => emptyStatus(true)),
+      error: err instanceof Error ? err.message : "Failed to select folder",
+      wroteGuide: false,
+    };
   }
-  return loaded;
 }
 
-/** Discover packages via /courses/manifest.json and load course.js (+ notes.js). Strict Mode–safe. */
-export function loadCourses(): Promise<string[]> {
-  if (!loadPromise) loadPromise = loadCoursesOnce();
-  return loadPromise;
+/** Re-authorize after needs-permission (must run from a click). */
+export async function reauthorizeAndLoadCourses(): Promise<CoursesLoadState> {
+  try {
+    const access = await ensureFolderAccess(true);
+    if (!access.ok) {
+      const status = await getFolderStatus();
+      return {
+        phase: "needs-permission",
+        courses: [],
+        folderName: status.folderName,
+        folderStatus: status,
+        error: "Permission was not granted. Click Allow when prompted.",
+        wroteGuide: false,
+      };
+    }
+    return await finishWithFolder(false);
+  } catch (err) {
+    return {
+      phase: "error",
+      courses: [],
+      folderName: null,
+      folderStatus: await getFolderStatus().catch(() => emptyStatus(true)),
+      error: err instanceof Error ? err.message : "Failed to access folder",
+      wroteGuide: false,
+    };
+  }
+}
+
+/** Rescan the linked folder (new courses, updated course.js). */
+export async function rescanCoursesFolder(): Promise<CoursesLoadState> {
+  try {
+    const access = await ensureFolderAccess(true);
+    if (!access.ok) {
+      const status = await getFolderStatus();
+      return {
+        phase: "needs-permission",
+        courses: [],
+        folderName: status.folderName,
+        folderStatus: status,
+        error: null,
+        wroteGuide: false,
+      };
+    }
+    return await finishWithFolder(false);
+  } catch (err) {
+    return {
+      phase: "error",
+      courses: [],
+      folderName: (await getFolderStatus()).folderName,
+      folderStatus: await getFolderStatus(),
+      error: err instanceof Error ? err.message : "Rescan failed",
+      wroteGuide: false,
+    };
+  }
+}
+
+export async function clearLinkedFolder(): Promise<CoursesLoadState> {
+  await unlinkCoursesFolder();
+  return {
+    phase: "no-folder",
+    courses: [],
+    folderName: null,
+    folderStatus: emptyStatus(isFsAccessSupported()),
+    error: null,
+    wroteGuide: false,
+  };
 }

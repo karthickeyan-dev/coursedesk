@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import type { CoursesBootPhase, CoursesLoadState } from "../lib/course-loader";
+import type { LocalFolderStatus } from "../lib/local-courses";
 import * as Storage from "../lib/storage";
 import type { Theme } from "../lib/storage";
 import type {
@@ -15,6 +17,9 @@ export interface AppStore {
   courses: AvailableCourse[];
   coursesLoaded: boolean;
   coursesError: string | null;
+  coursesPhase: CoursesBootPhase;
+  folderName: string | null;
+  folderStatus: LocalFolderStatus | null;
 
   view: AppView;
   activeCourse: AvailableCourse | null;
@@ -34,6 +39,7 @@ export interface AppStore {
   openFileGroupId: string | null;
 
   hydrateFromStorage: () => void;
+  applyCoursesLoadState: (state: CoursesLoadState) => void;
   setCourses: (courses: AvailableCourse[]) => void;
   openCourse: (courseId: string) => void;
   showLibrary: () => void;
@@ -74,6 +80,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
   courses: [],
   coursesLoaded: false,
   coursesError: null,
+  coursesPhase: "loading",
+  folderName: null,
+  folderStatus: null,
 
   view: "library",
   ...emptyCourseSlice(),
@@ -88,9 +97,26 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({ theme, curriculumOpen });
   },
 
+  applyCoursesLoadState: (state) => {
+    Storage.pruneCourses(state.courses.map((c) => c.data.id));
+    set({
+      courses: state.courses,
+      coursesLoaded: true,
+      coursesError: state.error,
+      coursesPhase: state.phase,
+      folderName: state.folderName,
+      folderStatus: state.folderStatus,
+    });
+  },
+
   setCourses: (courses) => {
     Storage.pruneCourses(courses.map((c) => c.data.id));
-    set({ courses, coursesLoaded: true, coursesError: null });
+    set({
+      courses,
+      coursesLoaded: true,
+      coursesError: null,
+      coursesPhase: "ready",
+    });
   },
 
   openCourse: (courseId) => {

@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { bootCourses } from "./store/boot";
-import "./styles/index.css";
+import "./styles/styles.css";
 import "highlight.js/styles/github-dark.css";
 
 const rootEl = document.getElementById("root");

@@ -1,7 +1,7 @@
 /** Framework-agnostic time/label helpers. */
 
 export function formatTime(seconds: number): string {
-  if (!isFinite(seconds) || seconds < 0) return "0:00";
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
   const total = Math.floor(seconds);
   const s = total % 60;
   const m = Math.floor(total / 60) % 60;
@@ -12,7 +12,7 @@ export function formatTime(seconds: number): string {
 }
 
 export function formatRate(rate: number): string {
-  if (!isFinite(rate)) return "1×";
+  if (!Number.isFinite(rate)) return "1×";
   const rounded = Math.round(rate * 100) / 100;
   return `${rounded}×`;
 }
@@ -56,8 +56,8 @@ export function extensionLabel(path: string): string {
 
 /** Resume position math (ported from player.ts). */
 export function applyResumeSeconds(seconds: number, duration: number): number | null {
-  if (!isFinite(duration) || duration <= 0) return null;
-  if (!isFinite(seconds) || seconds <= 0) return null;
+  if (!Number.isFinite(duration) || duration <= 0) return null;
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
   const endThreshold = Math.max(5, duration * 0.02);
   if (seconds >= duration - endThreshold) return 0;
   if (seconds > 2) return Math.min(seconds, duration - 0.25);

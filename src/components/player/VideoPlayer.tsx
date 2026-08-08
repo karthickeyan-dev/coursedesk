@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { resolveCourseAsset } from "../../lib/assets";
+import { useEffect, useRef, useState } from "react";
+import { resolveCourseAssetUrl } from "../../lib/assets";
 import * as Storage from "../../lib/storage";
 import { useAppStore } from "../../store/useAppStore";
 import { PlayerControls } from "./PlayerControls";
@@ -16,7 +16,19 @@ export function VideoPlayer() {
 
   const lesson = activeLessonId ? lessonsById[activeLessonId] : null;
   const videoPath = lesson?.video;
-  const src = resolveCourseAsset(activeCourse, videoPath);
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSrc(null);
+    if (!activeCourse || !videoPath) return;
+    void resolveCourseAssetUrl(activeCourse, videoPath).then((url) => {
+      if (!cancelled) setSrc(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCourse, videoPath, activeLessonId]);
 
   const api = useVideoPlayer({
     videoRef,
@@ -50,9 +62,19 @@ export function VideoPlayer() {
 
   if (!lesson) return null;
 
-  if (!src) {
+  if (!videoPath) {
     return (
       <section className="player-stage hidden" aria-label="Lecture video" />
+    );
+  }
+
+  if (!src) {
+    return (
+      <section className="player-stage" aria-label="Lecture video">
+        <div className="player-wrap player-loading">
+          <p className="player-loading-text">Loading video…</p>
+        </div>
+      </section>
     );
   }
 
@@ -78,9 +100,8 @@ export function VideoPlayer() {
 
 /** Expose active video check for app hotkeys (F = complete when no video). */
 export function useHasActiveVideo(): boolean {
-  const activeCourse = useAppStore((s) => s.activeCourse);
   const activeLessonId = useAppStore((s) => s.activeLessonId);
   const lessonsById = useAppStore((s) => s.lessonsById);
   const lesson = activeLessonId ? lessonsById[activeLessonId] : null;
-  return Boolean(resolveCourseAsset(activeCourse, lesson?.video));
+  return Boolean(lesson?.video);
 }

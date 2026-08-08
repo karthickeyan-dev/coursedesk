@@ -49,7 +49,7 @@ export function renderNotesInto(
       /* ignore */
     }
     const pre = block.parentElement;
-    if (!pre || pre.tagName !== "PRE") return;
+    if (pre?.tagName !== "PRE") return;
     if (pre.parentElement?.classList.contains("code-block")) return;
 
     const wrap = document.createElement("div");

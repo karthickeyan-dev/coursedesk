@@ -32,7 +32,7 @@ const ICONS: Record<HudKey, typeof Play> = {
 export function PlayerHud({ hud }: { hud: HudState }) {
   const Icon = ICONS[hud.key] ?? Play;
   const meter = hud.meter;
-  const showMeter = meter != null && isFinite(meter);
+  const showMeter = meter != null && Number.isFinite(meter);
 
   return (
     <div
@@ -47,7 +47,11 @@ export function PlayerHud({ hud }: { hud: HudState }) {
         <div className="player-hud-meter" hidden={!showMeter}>
           <div
             className="player-hud-meter-fill"
-            style={{ width: showMeter ? `${Math.max(0, Math.min(100, (meter ?? 0) * 100))}%` : "0%" }}
+            style={{
+              width: showMeter
+                ? `${Math.max(0, Math.min(100, (meter ?? 0) * 100))}%`
+                : "0%",
+            }}
           />
         </div>
       </div>

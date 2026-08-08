@@ -78,7 +78,7 @@ function normalizeRecord(raw: unknown): CourseRecord {
   if (isObj(raw.playbackPositions)) {
     for (const [id, val] of Object.entries(raw.playbackPositions)) {
       const n = typeof val === "number" ? val : Number(val);
-      if (isFinite(n) && n >= 3) base.playbackPositions[id] = Math.floor(n);
+      if (Number.isFinite(n) && n >= 3) base.playbackPositions[id] = Math.floor(n);
     }
   }
   return base;

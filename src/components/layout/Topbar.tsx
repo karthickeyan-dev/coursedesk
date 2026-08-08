@@ -1,6 +1,7 @@
 import { ChevronLeft, List, Moon, Sun } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import { ProgressPill } from "./ProgressPill";
+import { SettingsMenu } from "./SettingsMenu";
 
 export function Topbar() {
   const view = useAppStore((s) => s.view);
@@ -43,6 +44,7 @@ export function Topbar() {
       </div>
       <div className="topbar-right">
         <ProgressPill />
+        <SettingsMenu />
         <button
           type="button"
           className="icon-btn"

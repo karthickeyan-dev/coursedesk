@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, File } from "lucide-react";
 import { extensionLabel } from "../../lib/format";
 import type { CourseResource } from "../../types/course";
-import { resolveCourseAsset } from "../../lib/assets";
+import { resolveCourseAssetUrl } from "../../lib/assets";
 import { useAppStore } from "../../store/useAppStore";
 
 function groupResources(resources: CourseResource[]) {
@@ -34,6 +34,28 @@ export function FilesPanel() {
     () => groupResources(resources),
     [resources]
   );
+
+  const [hrefById, setHrefById] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!activeCourse || !resources.length) {
+      setHrefById({});
+      return;
+    }
+    void (async () => {
+      const next: Record<string, string> = {};
+      for (const item of resources) {
+        const key = item.id || item.path;
+        const url = await resolveCourseAssetUrl(activeCourse, item.path);
+        if (url) next[key] = url;
+      }
+      if (!cancelled) setHrefById(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCourse, resources]);
 
   useEffect(() => {
     if (!groups.length) return;
@@ -83,16 +105,28 @@ export function FilesPanel() {
             </button>
             <div className="category-lessons">
               {items.map((item) => {
-                const href = resolveCourseAsset(activeCourse, item.path);
-                if (!href) return null;
+                const key = item.id || item.path;
+                const href = hrefById[key];
+                if (!href) {
+                  return (
+                    <div key={key} className="files-item files-item-pending">
+                      <span className="files-item-icon" aria-hidden="true">
+                        <File size={16} />
+                      </span>
+                      <span className="title-wrap">
+                        <span className="title">{item.title || item.path}</span>
+                      </span>
+                    </div>
+                  );
+                }
                 return (
                   <a
-                    key={item.id || item.path}
+                    key={key}
                     className="files-item"
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    download=""
+                    download={item.title || undefined}
                   >
                     <span className="files-item-icon" aria-hidden="true">
                       <File size={16} />

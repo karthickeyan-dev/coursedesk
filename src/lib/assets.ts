@@ -1,31 +1,24 @@
 import type { AvailableCourse, CourseNotesMap, Lesson } from "../types/course";
 import { hasNotes } from "./notes";
+import { resolveLocalAssetUrl } from "./local-courses";
 
-export function courseRoot(course: AvailableCourse): string {
-  const explicit = course.data?.root;
-  if (explicit) return String(explicit).replace(/\/+$/, "");
-  return `courses/${course.data.id}`;
-}
-
-export function resolveCourseAsset(
+/** Resolve video / file paths to a playable or downloadable URL (blob: for local files). */
+export async function resolveCourseAssetUrl(
   course: AvailableCourse | null,
   assetPath: string | undefined | null
-): string | null {
+): Promise<string | null> {
   if (!course || !assetPath) return null;
   const raw = String(assetPath).trim();
   if (!raw) return null;
-  if (/^(https?:|data:|blob:|file:)/i.test(raw)) return raw;
-  if (raw.startsWith("courses/")) return raw.replace(/^\.\//, "");
-  const root = courseRoot(course);
-  const rel = raw.replace(/^\.\//, "").replace(/^\/+/, "");
-  return `${root}/${rel}`;
+  if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+  return resolveLocalAssetUrl(course.data.id, raw);
 }
 
 export function lessonDurationSeconds(lesson: Lesson | null | undefined): number {
   if (!lesson) return 0;
   const raw = lesson.duration;
-  if (typeof raw === "number" && isFinite(raw) && raw > 0) return raw;
-  if (typeof raw === "string" && raw.trim() && isFinite(Number(raw))) {
+  if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) return raw;
+  if (typeof raw === "string" && raw.trim() && Number.isFinite(Number(raw))) {
     const n = Number(raw);
     return n > 0 ? n : 0;
   }

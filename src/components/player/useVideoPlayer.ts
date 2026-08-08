@@ -110,8 +110,8 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
   const syncFromVideo = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
-    const duration = isFinite(video.duration) ? video.duration : 0;
-    const time = isFinite(video.currentTime) ? video.currentTime : 0;
+    const duration = Number.isFinite(video.duration) ? video.duration : 0;
+    const time = Number.isFinite(video.currentTime) ? video.currentTime : 0;
     const percent = duration > 0 ? (time / duration) * 100 : 0;
     const muted = video.muted || video.volume === 0;
     const volume = muted ? 0 : video.volume;
@@ -131,7 +131,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
   const persistTimeNow = useCallback(() => {
     const video = videoRef.current;
     if (!video || !isVideoActive()) return;
-    if (!isFinite(video.currentTime)) return;
+    if (!Number.isFinite(video.currentTime)) return;
     onTimePersistRef.current?.(video.currentTime);
     lastPersistAtRef.current = Date.now();
   }, [videoRef, isVideoActive]);
@@ -142,7 +142,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
     if (now - lastPersistAtRef.current < PERSIST_MS) return;
     lastPersistAtRef.current = now;
     const video = videoRef.current;
-    if (!video || !isFinite(video.currentTime)) return;
+    if (!video || !Number.isFinite(video.currentTime)) return;
     onTimePersistRef.current?.(video.currentTime);
   }, [videoRef, isVideoActive]);
 
@@ -162,7 +162,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
       const video = videoRef.current;
       if (!video) return;
       const startTime =
-        typeof opts.startTime === "number" && isFinite(opts.startTime)
+        typeof opts.startTime === "number" && Number.isFinite(opts.startTime)
           ? opts.startTime
           : null;
 
@@ -172,7 +172,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
         pendingResumeRef.current = startTime;
         video.src = src;
       } else if (startTime != null && startTime > 0) {
-        if (isFinite(video.duration) && video.duration > 0) {
+        if (Number.isFinite(video.duration) && video.duration > 0) {
           applyResume(startTime);
         } else {
           pendingResumeRef.current = startTime;
@@ -276,7 +276,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
       const video = videoRef.current;
       if (!video || !isVideoActive()) return;
       const duration = video.duration;
-      if (!isFinite(duration) || duration <= 0) return;
+      if (!Number.isFinite(duration) || duration <= 0) return;
       video.currentTime = Math.max(0, Math.min(duration, video.currentTime + deltaSeconds));
       syncFromVideo();
       if (fromKeyboard) {
@@ -292,7 +292,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
       const video = videoRef.current;
       if (!video || !isVideoActive()) return;
       const duration = video.duration;
-      if (!isFinite(duration) || duration <= 0) return;
+      if (!Number.isFinite(duration) || duration <= 0) return;
       video.currentTime = Math.max(0, Math.min(duration, duration * fraction));
       syncFromVideo();
       if (fromKeyboard) {
@@ -334,7 +334,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
       const video = videoRef.current;
       if (!video) return;
       const duration = video.duration;
-      if (!isFinite(duration) || duration <= 0) return;
+      if (!Number.isFinite(duration) || duration <= 0) return;
       video.currentTime = (percent / 100) * duration;
       setUi((prev) => ({ ...prev, seekPercent: percent, currentTime: video.currentTime }));
     },
@@ -362,7 +362,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
     (rate: number, fromKeyboard = false) => {
       const video = videoRef.current;
       if (!video || !isVideoActive()) return;
-      if (!isFinite(rate) || rate <= 0) return;
+      if (!Number.isFinite(rate) || rate <= 0) return;
       const nearest =
         PLAYBACK_RATES.find((r) => Math.abs(r - rate) < 0.001) ??
         PLAYBACK_RATES.reduce((best, r) =>
@@ -407,7 +407,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
     };
     const onEnded = () => {
       syncFromVideo();
-      if (isFinite(video.duration)) onTimePersistRef.current?.(video.duration);
+      if (Number.isFinite(video.duration)) onTimePersistRef.current?.(video.duration);
     };
     const onTimeUpdate = () => {
       syncFromVideo();
