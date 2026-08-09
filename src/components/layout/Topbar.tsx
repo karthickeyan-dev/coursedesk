@@ -1,4 +1,4 @@
-import { ChevronLeft, List, Moon, Sun } from "lucide-react";
+import { ChevronLeft, Moon, Sun } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/useAppStore";
@@ -12,11 +12,9 @@ const topbarIcon =
 export function Topbar() {
   const view = useAppStore((s) => s.view);
   const theme = useAppStore((s) => s.theme);
-  const curriculumOpen = useAppStore((s) => s.curriculumOpen);
   const activeCourse = useAppStore((s) => s.activeCourse);
   const showLibrary = useAppStore((s) => s.showLibrary);
   const toggleTheme = useAppStore((s) => s.toggleTheme);
-  const setCurriculumOpen = useAppStore((s) => s.setCurriculumOpen);
 
   const inCourse = view === "course" && activeCourse;
   const title = inCourse
@@ -54,7 +52,6 @@ export function Topbar() {
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <ProgressPill />
-        <SettingsMenu />
         <Button
           type="button"
           variant="ghost"
@@ -72,20 +69,7 @@ export function Topbar() {
             <Sun className="size-[18px]" strokeWidth={2} />
           )}
         </Button>
-        {inCourse && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={topbarIcon}
-            title="Course content"
-            aria-label="Toggle course content"
-            aria-expanded={curriculumOpen}
-            onClick={() => setCurriculumOpen(!curriculumOpen)}
-          >
-            <List className="size-[18px]" strokeWidth={2} />
-          </Button>
-        )}
+        <SettingsMenu />
       </div>
     </header>
   );

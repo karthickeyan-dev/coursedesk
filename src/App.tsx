@@ -14,6 +14,7 @@ export function App() {
   const coursesLoaded = useAppStore((s) => s.coursesLoaded);
   const goToAdjacentLesson = useAppStore((s) => s.goToAdjacentLesson);
   const markActiveComplete = useAppStore((s) => s.markActiveComplete);
+  const setCurriculumOpen = useAppStore((s) => s.setCurriculumOpen);
   const activeLessonId = useAppStore((s) => s.activeLessonId);
   const hasActiveVideo = useHasActiveVideo();
 
@@ -31,6 +32,21 @@ export function App() {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented) return;
       if (isEditableTarget(event.target)) return;
+
+      // Ctrl/Cmd+B — toggle curriculum sidebar (course view only)
+      if (
+        (event.key === "b" || event.key === "B") &&
+        (event.ctrlKey || event.metaKey) &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
+        if (view === "course" && activeCourse) {
+          event.preventDefault();
+          setCurriculumOpen(!curriculumOpen);
+        }
+        return;
+      }
+
       switch (event.key) {
         case "[":
           event.preventDefault();
@@ -53,7 +69,16 @@ export function App() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [goToAdjacentLesson, markActiveComplete, hasActiveVideo, activeLessonId]);
+  }, [
+    goToAdjacentLesson,
+    markActiveComplete,
+    hasActiveVideo,
+    activeLessonId,
+    view,
+    activeCourse,
+    curriculumOpen,
+    setCurriculumOpen,
+  ]);
 
   const libraryMode = view === "library";
 
