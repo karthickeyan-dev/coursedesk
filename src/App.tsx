@@ -5,6 +5,7 @@ import { CourseLibrary } from "./components/library/CourseLibrary";
 import { LessonView } from "./components/lesson/LessonView";
 import { isEditableTarget } from "./components/player/useVideoPlayer";
 import { useHasActiveVideo } from "./components/player/VideoPlayer";
+import { getRouteFromLocation, replaceLibraryRoute } from "./lib/router";
 import { useAppStore } from "./store/useAppStore";
 
 export function App() {
@@ -17,6 +18,38 @@ export function App() {
   const setCurriculumOpen = useAppStore((s) => s.setCurriculumOpen);
   const activeLessonId = useAppStore((s) => s.activeLessonId);
   const hasActiveVideo = useHasActiveVideo();
+
+  useEffect(() => {
+    const onPopState = () => {
+      const route = getRouteFromLocation();
+      const store = useAppStore.getState();
+      if (!store.coursesLoaded) return;
+
+      if (route.view === "course" && route.courseId) {
+        const courseExists = store.courses.some(
+          (c) => c.data.id === route.courseId
+        );
+        if (courseExists) {
+          if (
+            store.view !== "course" ||
+            store.activeCourse?.data.id !== route.courseId
+          ) {
+            store.openCourse(route.courseId, { skipHistory: true });
+          }
+        } else {
+          store.showLibrary({ skipHistory: true });
+          replaceLibraryRoute();
+        }
+      } else {
+        if (store.view !== "library") {
+          store.showLibrary({ skipHistory: true });
+        }
+      }
+    };
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   useEffect(() => {
     if (view === "library" || !activeCourse) {

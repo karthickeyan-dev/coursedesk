@@ -10,8 +10,14 @@ import type {
   Lesson,
 } from "../types/course";
 
+import { pushCourseRoute, pushLibraryRoute } from "../lib/router";
+
 export type AppView = "library" | "course";
 export type SidebarTab = "content" | "files";
+
+export interface NavigationOptions {
+  skipHistory?: boolean;
+}
 
 export interface AppStore {
   courses: AvailableCourse[];
@@ -41,8 +47,8 @@ export interface AppStore {
   hydrateFromStorage: () => void;
   applyCoursesLoadState: (state: CoursesLoadState) => void;
   setCourses: (courses: AvailableCourse[]) => void;
-  openCourse: (courseId: string) => void;
-  showLibrary: () => void;
+  openCourse: (courseId: string, options?: NavigationOptions) => void;
+  showLibrary: (options?: NavigationOptions) => void;
   selectLesson: (lessonId: string) => void;
   toggleFinished: (lessonId: string) => void;
   toggleSectionFinished: (lessonIds: string[]) => void;
@@ -119,9 +125,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
     });
   },
 
-  openCourse: (courseId) => {
+  openCourse: (courseId, options) => {
     const course = get().courses.find((c) => c.data.id === courseId);
     if (!course) return;
+
+    if (!options?.skipHistory) {
+      pushCourseRoute(courseId);
+    }
 
     const lessons = course.data.lessons || [];
     const categories = course.data.categories || [];
@@ -171,7 +181,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
-  showLibrary: () => {
+  showLibrary: (options) => {
+    if (!options?.skipHistory) {
+      pushLibraryRoute();
+    }
     Storage.saveActiveCourseId(null);
     set({
       view: "library",

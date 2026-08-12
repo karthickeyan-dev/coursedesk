@@ -2,7 +2,11 @@ import {
   bootLocalCourses,
   type CoursesLoadState,
 } from "../lib/course-loader";
-import * as Storage from "../lib/storage";
+import {
+  getRouteFromLocation,
+  replaceCourseRoute,
+  replaceLibraryRoute,
+} from "../lib/router";
 import { useAppStore } from "./useAppStore";
 
 let bootPromise: Promise<void> | null = null;
@@ -14,23 +18,31 @@ function applyLoadState(state: CoursesLoadState): void {
   store.applyCoursesLoadState(state);
 
   if (state.phase === "ready" && state.courses.length > 0) {
+    const route = getRouteFromLocation();
+    if (route.view === "course" && route.courseId) {
+      if (state.courses.some((c) => c.data.id === route.courseId)) {
+        store.openCourse(route.courseId, { skipHistory: true });
+        replaceCourseRoute(route.courseId);
+        return;
+      }
+    }
+
     // Keep the open course across rescan when it still exists
     if (
       prevView === "course" &&
       prevCourseId &&
       state.courses.some((c) => c.data.id === prevCourseId)
     ) {
-      store.openCourse(prevCourseId);
+      store.openCourse(prevCourseId, { skipHistory: true });
+      replaceCourseRoute(prevCourseId);
       return;
     }
-    const last = Storage.loadActiveCourseId();
-    if (last && state.courses.some((c) => c.data.id === last)) {
-      store.openCourse(last);
-    } else {
-      store.showLibrary();
-    }
+
+    store.showLibrary({ skipHistory: true });
+    replaceLibraryRoute();
   } else {
-    store.showLibrary();
+    store.showLibrary({ skipHistory: true });
+    replaceLibraryRoute();
   }
 }
 

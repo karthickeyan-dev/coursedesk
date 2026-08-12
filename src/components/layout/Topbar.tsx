@@ -26,6 +26,14 @@ export function Topbar() {
     ? activeCourse.data.author || activeCourse.meta.author || "Course"
     : "CourseDesk";
 
+  const handleBack = () => {
+    if (window.history.state?.fromApp) {
+      window.history.back();
+    } else {
+      showLibrary();
+    }
+  };
+
   return (
     <header className="z-20 flex h-(--spacing-topbar) shrink-0 items-center justify-between gap-4 border-b border-tb-border bg-tb px-5 text-tb-text">
       <div className="flex min-w-0 items-center gap-3">
@@ -37,7 +45,7 @@ export function Topbar() {
             className={topbarIcon}
             title="All courses"
             aria-label="Back to all courses"
-            onClick={showLibrary}
+            onClick={handleBack}
           >
             <ChevronLeft className="size-[18px]" strokeWidth={2} />
           </Button>
