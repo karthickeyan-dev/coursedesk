@@ -177,6 +177,8 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
         } else {
           pendingResumeRef.current = startTime;
         }
+      } else {
+        video.currentTime = 0;
       }
       syncFromVideo();
     },

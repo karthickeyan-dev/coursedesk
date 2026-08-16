@@ -30,31 +30,42 @@ export function VideoPlayer() {
     };
   }, [activeCourse, videoPath]);
 
+  const loadedCourseIdRef = useRef<string | null>(null);
+  const loadedLessonIdRef = useRef<string | null>(null);
+
   const api = useVideoPlayer({
     videoRef,
     stageRef,
     enabled: Boolean(src),
     onTimePersist: (seconds) => {
-      const course = useAppStore.getState().activeCourse;
-      const lessonId = useAppStore.getState().activeLessonId;
-      if (!course || !lessonId) return;
-      Storage.saveLessonTime(course.data.id, lessonId, seconds);
+      const courseId = loadedCourseIdRef.current;
+      const lessonId = loadedLessonIdRef.current;
+      if (!courseId || !lessonId) return;
+      Storage.saveLessonTime(courseId, lessonId, seconds);
     },
   });
 
   const { persistTimeNow, hideVideo, showVideo } = api;
-  const prevLessonRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (prevLessonRef.current && prevLessonRef.current !== activeLessonId) {
+    const prevCourseId = loadedCourseIdRef.current;
+    const prevLessonId = loadedLessonIdRef.current;
+
+    if (
+      prevCourseId &&
+      prevLessonId &&
+      (prevCourseId !== activeCourse?.data.id || prevLessonId !== activeLessonId)
+    ) {
       persistTimeNow();
     }
-    prevLessonRef.current = activeLessonId;
 
     if (!src || !activeCourse || !activeLessonId) {
       hideVideo();
       return;
     }
+
+    loadedCourseIdRef.current = activeCourse.data.id;
+    loadedLessonIdRef.current = activeLessonId;
 
     const startTime = Storage.loadLessonTime(activeCourse.data.id, activeLessonId);
     showVideo(src, { startTime });
