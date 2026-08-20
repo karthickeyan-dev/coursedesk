@@ -22,51 +22,56 @@ export function LessonButton({ lesson }: { lesson: Lesson }) {
   const timeLabel = formatLessonTime(seconds);
 
   return (
-    <button
-      type="button"
-      className={cn(
-        "grid w-full grid-cols-[22px_1fr_auto] items-start gap-2.5 border-0 border-l-[3px] bg-transparent py-3 pr-4 pl-3.5 text-left text-text",
-        active
-          ? "border-l-accent bg-accent-soft"
-          : "border-l-transparent hover:bg-text/4"
-      )}
-      data-lesson-id={lesson.id}
-      onClick={() => selectLesson(lesson.id)}
-    >
-      <CompletionCheck
-        className="mt-px"
-        checked={done}
-        title={done ? "Completed" : "Mark complete"}
-        onClick={(e) => e.stopPropagation()}
-        onCheckedChange={() => toggleFinished(lesson.id)}
-      />
-      <span className="min-w-0">
-        <span
-          className={cn(
-            "block text-[13.5px] leading-snug font-medium",
-            done && "text-muted"
-          )}
-        >
-          {lesson.title}
+    <div className="relative">
+      <button
+        type="button"
+        className={cn(
+          "grid w-full min-w-0 grid-cols-[22px_1fr_auto] items-start gap-2.5 border-0 border-l-[3px] bg-transparent py-3 pr-4 pl-3.5 text-left text-text",
+          active
+            ? "border-l-accent bg-accent-soft"
+            : "border-l-transparent hover:bg-text/4"
+        )}
+        data-lesson-id={lesson.id}
+        onClick={() => selectLesson(lesson.id)}
+      >
+        <span className="mt-px size-[18px] shrink-0" aria-hidden />
+        <span className="min-w-0">
+          <span
+            className={cn(
+              "block text-[13.5px] leading-snug font-medium",
+              done && "text-muted"
+            )}
+          >
+            {lesson.title}
+          </span>
+          <span className="mt-0.5 block text-xs text-muted-2">
+            {lectureTypeLabel(lesson, notesByLessonId)}
+          </span>
         </span>
-        <span className="mt-0.5 block text-xs text-muted-2">
-          {lectureTypeLabel(lesson, notesByLessonId)}
-        </span>
-      </span>
-      {timeLabel ? (
-        <span
-          className={cn(
-            "mt-px whitespace-nowrap text-xs font-semibold tracking-wide tabular-nums",
-            active
-              ? "text-[color-mix(in_srgb,var(--accent)_70%,var(--muted-2))]"
-              : "text-muted-2",
-            done && "opacity-85"
-          )}
-          title={formatDurationTotal(seconds)}
-        >
-          {timeLabel}
-        </span>
-      ) : null}
-    </button>
+        {timeLabel ? (
+          <span
+            className={cn(
+              "mt-px whitespace-nowrap text-xs font-semibold tracking-wide tabular-nums",
+              active
+                ? "text-[color-mix(in_srgb,var(--accent)_70%,var(--muted-2))]"
+                : "text-muted-2",
+              done && "opacity-85"
+            )}
+            title={formatDurationTotal(seconds)}
+          >
+            {timeLabel}
+          </span>
+        ) : null}
+      </button>
+      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-start pt-3 pl-[calc(0.875rem+3px)]">
+        <CompletionCheck
+          className="pointer-events-auto mt-px"
+          checked={done}
+          title={done ? "Completed" : "Mark complete"}
+          onClick={(e) => e.stopPropagation()}
+          onCheckedChange={() => toggleFinished(lesson.id)}
+        />
+      </div>
+    </div>
   );
 }

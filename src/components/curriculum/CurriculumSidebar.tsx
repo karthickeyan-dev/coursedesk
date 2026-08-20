@@ -53,7 +53,7 @@ function CurriculumPanel({ className }: { className?: string }) {
   }, [hasFiles, sidebarTab, setSidebarTab]);
 
   const contentNav = (
-    <nav className="min-h-0 flex-1">
+    <nav className="block w-full min-w-0">
       {categories.map((category, index) => {
         const catLessons = lessonsByCategory.get(category.id) || [];
         if (!catLessons.length) return null;

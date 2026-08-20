@@ -1,23 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { CompletionCheck } from "@/components/ui/completion-check";
 import { categoryTitle } from "@/lib/assets";
-import { isLessonFinished } from "@/store/selectors";
 import { useAppStore } from "@/store/useAppStore";
-import { cn } from "@/lib/utils";
 
 export function LectureBar() {
   const activeLessonId = useAppStore((s) => s.activeLessonId);
   const lessonsById = useAppStore((s) => s.lessonsById);
   const categories = useAppStore((s) => s.categories);
-  const completedLessonIds = useAppStore((s) => s.completedLessonIds);
   const autoplay = useAppStore((s) => s.autoplay);
-  const markActiveComplete = useAppStore((s) => s.markActiveComplete);
   const setAutoplay = useAppStore((s) => s.setAutoplay);
 
   const lesson = activeLessonId ? lessonsById[activeLessonId] : null;
-  const done = activeLessonId
-    ? isLessonFinished(completedLessonIds, activeLessonId)
-    : false;
 
   return (
     <section className="w-full border-b border-border bg-elevated px-4 py-[18px] sm:px-6">
@@ -52,28 +45,6 @@ export function LectureBar() {
               }
             />
             Autoplay
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className={cn(
-              "min-w-44 justify-center max-[560px]:flex-1",
-              done &&
-                "border-ok/50 bg-ok-soft text-ok hover:border-ok hover:bg-ok/12 hover:text-ok"
-            )}
-            disabled={!activeLessonId}
-            onClick={markActiveComplete}
-          >
-            <CompletionCheck
-              checked={done}
-              decorative
-              className={
-                done
-                  ? undefined
-                  : "!border-[var(--btn-secondary-border)]"
-              }
-            />
-            {done ? "Completed" : "Mark as complete"}
           </Button>
         </div>
       </div>

@@ -47,21 +47,13 @@ export function CategorySection({
       className="block w-full border-b border-border"
       data-category-id={category.id}
     >
-      <div className="grid w-full grid-cols-[22px_1fr_auto] items-start gap-2.5 bg-panel-2 px-4 py-3.5 pr-4 pl-3.5 text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]">
-        <CompletionCheck
-          className="mt-0.5"
-          checked={checkState}
-          title={allDone ? "Mark section incomplete" : "Mark section complete"}
-          onClick={(e) => e.stopPropagation()}
-          onCheckedChange={() =>
-            toggleSectionFinished(lessons.map((l) => l.id))
-          }
-        />
+      <div className="relative">
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="col-span-2 grid w-full min-w-0 grid-cols-[1fr_auto] items-start gap-2.5 border-0 bg-transparent p-0 text-left text-inherit"
+            className="grid w-full min-w-0 grid-cols-[22px_1fr_auto] items-start gap-2.5 border-0 bg-panel-2 px-4 py-3.5 pr-4 pl-3.5 text-left text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]"
           >
+            <span className="mt-0.5 size-[18px] shrink-0" aria-hidden />
             <span className="flex min-w-0 flex-col gap-1">
               <span className="text-sm leading-snug font-semibold">
                 Section {sectionNumber}: {category.title}
@@ -83,6 +75,17 @@ export function CategorySection({
             </span>
           </button>
         </CollapsibleTrigger>
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-start pt-3.5 pl-3.5">
+          <CompletionCheck
+            className="pointer-events-auto mt-0.5"
+            checked={checkState}
+            title={allDone ? "Mark section incomplete" : "Mark section complete"}
+            onClick={(e) => e.stopPropagation()}
+            onCheckedChange={() =>
+              toggleSectionFinished(lessons.map((l) => l.id))
+            }
+          />
+        </div>
       </div>
       <CollapsibleContent className="block w-full bg-elevated">
         {lessons.map((lesson) => (

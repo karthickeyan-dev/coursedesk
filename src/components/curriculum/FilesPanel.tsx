@@ -28,9 +28,6 @@ function groupResources(resources: CourseResource[]) {
   return { groups, byGroup };
 }
 
-const rowGrid =
-  "grid w-full grid-cols-[36px_1fr_auto] items-center gap-2.5 border-0 px-4 py-3 text-left";
-
 const fileActionClass =
   "h-7 w-7 min-h-7 shrink-0 text-muted-2 hover:text-text";
 
@@ -46,7 +43,10 @@ function ResourceRow({
 
   return (
     <div
-      className={cn(rowGrid, href ? "text-text" : "opacity-65")}
+      className={cn(
+        "grid w-full min-w-0 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-3 text-left",
+        href ? "text-text" : "opacity-65"
+      )}
     >
       <FileTypeIcon path={item.path} />
       <span className="min-w-0">
@@ -164,7 +164,7 @@ export function FilesPanel() {
             <CollapsibleTrigger asChild>
               <button
                 type="button"
-                className="grid w-full min-w-0 grid-cols-[1fr_auto] items-start gap-2.5 border-0 bg-panel-2 px-4 py-3.5 text-left text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]"
+                className="grid w-full min-w-0 grid-cols-[1fr_auto] items-center gap-2 border-0 bg-panel-2 px-4 py-3.5 text-left text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]"
               >
                 <span className="flex min-w-0 flex-col gap-1">
                   <span className="text-sm leading-snug font-semibold">
@@ -174,7 +174,7 @@ export function FilesPanel() {
                     {items.length} file{items.length === 1 ? "" : "s"}
                   </span>
                 </span>
-                <span className="mt-0.5 grid place-items-center">
+                <span className="grid place-items-center">
                   <ChevronRight
                     size={16}
                     strokeWidth={2}
