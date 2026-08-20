@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, File } from "lucide-react";
+import { ChevronRight, Download, ExternalLink } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 import { resolveCourseAssetUrl } from "@/lib/assets";
-import { extensionLabel } from "@/lib/format";
+import { canViewInBrowser, fileBasename } from "@/lib/format";
+import { FileTypeIcon } from "./FileTypeIcon";
 import type { CourseResource } from "@/types/course";
 import { useAppStore } from "@/store/useAppStore";
 import { cn } from "@/lib/utils";
@@ -26,9 +28,67 @@ function groupResources(resources: CourseResource[]) {
   return { groups, byGroup };
 }
 
-/** Match curriculum lesson / section row chrome. */
 const rowGrid =
-  "grid w-full grid-cols-[22px_1fr_auto] items-start gap-2.5 border-0 py-3 pr-4 pl-3.5 text-left";
+  "grid w-full grid-cols-[36px_1fr_auto] items-center gap-2.5 border-0 px-4 py-3 text-left";
+
+const fileActionClass =
+  "h-7 w-7 min-h-7 shrink-0 text-muted-2 hover:text-text";
+
+function ResourceRow({
+  item,
+  href,
+}: {
+  item: CourseResource;
+  href?: string;
+}) {
+  const label = item.title || item.path;
+  const canView = Boolean(href) && canViewInBrowser(item.path);
+
+  return (
+    <div
+      className={cn(rowGrid, href ? "text-text" : "opacity-65")}
+    >
+      <FileTypeIcon path={item.path} />
+      <span className="min-w-0">
+        <span className="block truncate text-[13.5px] leading-snug font-medium">
+          {label}
+        </span>
+        {item.description ? (
+          <span className="mt-0.5 block text-xs text-muted-2">
+            {item.description}
+          </span>
+        ) : null}
+      </span>
+      <span className="flex items-center gap-0.5">
+        {href && canView ? (
+          <Button asChild variant="ghost" size="icon" className={fileActionClass}>
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="View in browser"
+              aria-label={`View ${label} in browser`}
+            >
+              <ExternalLink />
+            </a>
+          </Button>
+        ) : null}
+        {href ? (
+          <Button asChild variant="ghost" size="icon" className={fileActionClass}>
+            <a
+              href={href}
+              download={fileBasename(item.path)}
+              title="Download"
+              aria-label={`Download ${label}`}
+            >
+              <Download />
+            </a>
+          </Button>
+        ) : null}
+      </span>
+    </div>
+  );
+}
 
 export function FilesPanel() {
   const activeCourse = useAppStore((s) => s.activeCourse);
@@ -101,98 +161,42 @@ export function FilesPanel() {
             className="block w-full border-b border-border"
             data-file-group={groupName}
           >
-            {/* Same outer header shell as CategorySection */}
-            <div className="grid w-full grid-cols-[22px_1fr_auto] items-start gap-2.5 bg-panel-2 px-4 py-3.5 pr-4 pl-3.5 text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]">
-              <span
-                className="mt-0.5 h-[18px] w-[18px] shrink-0"
-                aria-hidden
-              />
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="col-span-2 grid w-full min-w-0 grid-cols-[1fr_auto] items-start gap-2.5 border-0 bg-transparent p-0 text-left text-inherit"
-                >
-                  <span className="flex min-w-0 flex-col gap-1">
-                    <span className="text-sm leading-snug font-semibold">
-                      {groupName}
-                    </span>
-                    <span className="text-left text-xs font-medium text-muted-2 tabular-nums">
-                      {items.length} file{items.length === 1 ? "" : "s"}
-                    </span>
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="grid w-full min-w-0 grid-cols-[1fr_auto] items-start gap-2.5 border-0 bg-panel-2 px-4 py-3.5 text-left text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]"
+              >
+                <span className="flex min-w-0 flex-col gap-1">
+                  <span className="text-sm leading-snug font-semibold">
+                    {groupName}
                   </span>
-                  <span className="mt-0.5 grid place-items-center">
-                    <ChevronRight
-                      size={16}
-                      strokeWidth={2}
-                      className={cn(
-                        "block text-muted-2 transition-transform duration-150",
-                        open && "rotate-90"
-                      )}
-                      aria-hidden
-                    />
+                  <span className="text-left text-xs font-medium text-muted-2 tabular-nums">
+                    {items.length} file{items.length === 1 ? "" : "s"}
                   </span>
-                </button>
-              </CollapsibleTrigger>
-            </div>
+                </span>
+                <span className="mt-0.5 grid place-items-center">
+                  <ChevronRight
+                    size={16}
+                    strokeWidth={2}
+                    className={cn(
+                      "block text-muted-2 transition-transform duration-150",
+                      open && "rotate-90"
+                    )}
+                    aria-hidden
+                  />
+                </span>
+              </button>
+            </CollapsibleTrigger>
 
             <CollapsibleContent className="block w-full bg-elevated">
               {items.map((item) => {
                 const key = item.id || item.path;
-                const href = hrefById[key];
-                const body = (
-                  <>
-                    <span
-                      className="mt-px grid h-[18px] w-[18px] place-items-center text-muted-2"
-                      aria-hidden="true"
-                    >
-                      <File size={16} className="block" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-[13.5px] leading-snug font-medium">
-                        {item.title || item.path}
-                      </span>
-                      {item.description ? (
-                        <span className="mt-0.5 block text-xs text-muted-2">
-                          {item.description}
-                        </span>
-                      ) : null}
-                    </span>
-                    {href ? (
-                      <span className="mt-px whitespace-nowrap text-xs font-semibold tracking-wide text-muted-2 uppercase tabular-nums">
-                        {extensionLabel(item.path)}
-                      </span>
-                    ) : null}
-                  </>
-                );
-
-                if (!href) {
-                  return (
-                    <div
-                      key={key}
-                      className={cn(
-                        rowGrid,
-                        "border-l-[3px] border-l-transparent opacity-65"
-                      )}
-                    >
-                      {body}
-                    </div>
-                  );
-                }
-
                 return (
-                  <a
+                  <ResourceRow
                     key={key}
-                    className={cn(
-                      rowGrid,
-                      "cursor-pointer border-l-[3px] border-l-transparent bg-transparent font-inherit text-text no-underline hover:bg-text/4"
-                    )}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={`Open ${item.title || item.path}`}
-                  >
-                    {body}
-                  </a>
+                    item={item}
+                    href={hrefById[key]}
+                  />
                 );
               })}
             </CollapsibleContent>

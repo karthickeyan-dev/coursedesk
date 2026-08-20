@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   applyResumeSeconds,
+  canViewInBrowser,
+  fileBasename,
+  fileIconLabel,
+  fileKind,
   formatDurationTotal,
   formatRate,
   formatTime,
@@ -26,6 +30,59 @@ describe("formatDurationTotal", () => {
     expect(formatDurationTotal(0)).toBe("0m");
     expect(formatDurationTotal(90)).toBe("1m 30s");
     expect(formatDurationTotal(3600)).toBe("1h");
+  });
+});
+
+describe("fileBasename", () => {
+  it("returns the last path segment", () => {
+    expect(fileBasename("assets/cheatsheet.pdf")).toBe("cheatsheet.pdf");
+    expect(fileBasename("mock.fig")).toBe("mock.fig");
+  });
+
+  it("falls back when empty", () => {
+    expect(fileBasename("")).toBe("download");
+  });
+});
+
+describe("fileKind", () => {
+  it("classifies common course file types", () => {
+    expect(fileKind("assets/cheatsheet.pdf")).toBe("pdf");
+    expect(fileKind("shot.PNG")).toBe("image");
+    expect(fileKind("clip.mp4")).toBe("video");
+    expect(fileKind("theme.mp3")).toBe("audio");
+    expect(fileKind("files.zip")).toBe("archive");
+    expect(fileKind("grades.xlsx")).toBe("spreadsheet");
+    expect(fileKind("deck.pptx")).toBe("presentation");
+    expect(fileKind("brief.docx")).toBe("document");
+    expect(fileKind("demo.js")).toBe("code");
+    expect(fileKind("notes.md")).toBe("text");
+    expect(fileKind("mock.fig")).toBe("design");
+    expect(fileKind("noext")).toBe("file");
+  });
+});
+
+describe("fileIconLabel", () => {
+  it("fits the badge", () => {
+    expect(fileIconLabel("a.pdf")).toBe("PDF");
+    expect(fileIconLabel("a.jpeg")).toBe("JPG");
+    expect(fileIconLabel("a.markdown")).toBe("MD");
+    expect(fileIconLabel("a.fig")).toBe("FIG");
+  });
+});
+
+describe("canViewInBrowser", () => {
+  it("allows formats the browser can render", () => {
+    expect(canViewInBrowser("assets/photo.png")).toBe(true);
+    expect(canViewInBrowser("notes.PDF")).toBe(true);
+    expect(canViewInBrowser("clip.mp4")).toBe(true);
+    expect(canViewInBrowser("readme.txt")).toBe(true);
+  });
+
+  it("rejects unsupported binaries", () => {
+    expect(canViewInBrowser("mock.fig")).toBe(false);
+    expect(canViewInBrowser("archive.zip")).toBe(false);
+    expect(canViewInBrowser("slides.pptx")).toBe(false);
+    expect(canViewInBrowser("design.psd")).toBe(false);
   });
 });
 
