@@ -79,3 +79,14 @@ export function isLessonFinished(
 ): boolean {
   return completedLessonIds.includes(lessonId);
 }
+
+/** Immediate next lecture in curriculum order, or null at the end. */
+export function nextLessonId(
+  lessons: { id: string }[],
+  activeLessonId: string | null
+): string | null {
+  if (!activeLessonId) return null;
+  const i = lessons.findIndex((l) => l.id === activeLessonId);
+  if (i < 0) return null;
+  return lessons[i + 1]?.id ?? null;
+}

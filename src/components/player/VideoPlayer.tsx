@@ -43,6 +43,9 @@ export function VideoPlayer() {
       if (!courseId || !lessonId) return;
       Storage.saveLessonTime(courseId, lessonId, seconds);
     },
+    onEnded: () => {
+      useAppStore.getState().onActiveLessonEnded();
+    },
   });
 
   const { persistTimeNow, hideVideo, showVideo } = api;
@@ -64,11 +67,23 @@ export function VideoPlayer() {
       return;
     }
 
+    const switchingLesson =
+      loadedLessonIdRef.current !== activeLessonId ||
+      loadedCourseIdRef.current !== activeCourse.data.id;
+    const attachedSrc = videoRef.current?.getAttribute("src") ?? "";
+    // Lesson changed but this blob URL still belongs to the previous lecture.
+    if (switchingLesson && attachedSrc && attachedSrc === src) {
+      return;
+    }
+
     loadedCourseIdRef.current = activeCourse.data.id;
     loadedLessonIdRef.current = activeLessonId;
 
     const startTime = Storage.loadLessonTime(activeCourse.data.id, activeLessonId);
-    showVideo(src, { startTime });
+    const pendingId = useAppStore.getState().pendingAutoplayLessonId;
+    const autoplay = pendingId === activeLessonId;
+    if (autoplay) useAppStore.getState().clearPendingAutoplay();
+    showVideo(src, { startTime, autoplay });
   }, [src, activeLessonId, activeCourse, persistTimeNow, hideVideo, showVideo]);
 
   if (!lesson) return null;

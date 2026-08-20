@@ -9,6 +9,7 @@ const K = {
   sidebar: `${P}.sidebar`,
   active: `${P}.activeCourse`,
   courses: `${P}.courses`,
+  autoplay: `${P}.autoplay`,
 } as const;
 
 export type Theme = "dark" | "light";
@@ -125,6 +126,15 @@ export function loadCurriculumOpen(defaultOpen: boolean): boolean {
 
 export const saveCurriculumOpen = (open: boolean): void =>
   set(K.sidebar, open ? "1" : "0");
+
+export function loadAutoplay(defaultOn = false): boolean {
+  const v = get(K.autoplay);
+  if (v === "0") return false;
+  if (v === "1") return true;
+  return defaultOn;
+}
+
+export const saveAutoplay = (on: boolean): void => set(K.autoplay, on ? "1" : "0");
 
 export const loadActiveCourseId = (): string | null => get(K.active) || null;
 

@@ -6,6 +6,7 @@ const KEYS = [
   "coursedesk.sidebar",
   "coursedesk.activeCourse",
   "coursedesk.courses",
+  "coursedesk.autoplay",
 ];
 
 function clearStorage(): void {
@@ -39,6 +40,15 @@ describe("storage", () => {
     expect(Storage.loadCurriculumOpen(true)).toBe(false);
     Storage.saveCurriculumOpen(true);
     expect(Storage.loadCurriculumOpen(false)).toBe(true);
+  });
+
+  it("persists autoplay preference", () => {
+    expect(Storage.loadAutoplay(false)).toBe(false);
+    expect(Storage.loadAutoplay(true)).toBe(true);
+    Storage.saveAutoplay(true);
+    expect(Storage.loadAutoplay(false)).toBe(true);
+    Storage.saveAutoplay(false);
+    expect(Storage.loadAutoplay(true)).toBe(false);
   });
 
   it("saves and loads finished lesson ids", () => {

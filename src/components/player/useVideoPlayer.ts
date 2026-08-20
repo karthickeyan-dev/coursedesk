@@ -55,12 +55,13 @@ export interface UseVideoPlayerOptions {
   videoRef: RefObject<HTMLVideoElement | null>;
   stageRef: RefObject<HTMLElement | null>;
   onTimePersist?: (seconds: number) => void;
+  onEnded?: () => void;
   enabled?: boolean;
 }
 
 export interface UseVideoPlayerApi {
   ui: PlayerUiState;
-  showVideo: (src: string, options?: { startTime?: number }) => void;
+  showVideo: (src: string, options?: { startTime?: number; autoplay?: boolean }) => void;
   hideVideo: () => void;
   persistTimeNow: () => void;
   isVideoActive: () => boolean;
@@ -76,15 +77,18 @@ export interface UseVideoPlayerApi {
 }
 
 export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerApi {
-  const { videoRef, stageRef, onTimePersist, enabled = true } = options;
+  const { videoRef, stageRef, onTimePersist, onEnded, enabled = true } = options;
   const [ui, setUi] = useState<PlayerUiState>(initialPlayerUi);
 
   const lastVolumeRef = useRef(1);
   const pendingResumeRef = useRef<number | null>(null);
+  const pendingPlayRef = useRef(false);
   const lastPersistAtRef = useRef(0);
   const hudTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onTimePersistRef = useRef(onTimePersist);
   onTimePersistRef.current = onTimePersist;
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
 
   const isVideoActive = useCallback((): boolean => {
     const video = videoRef.current;
@@ -157,8 +161,22 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
     [videoRef, syncFromVideo]
   );
 
+  const flushPendingPlay = useCallback(() => {
+    if (!pendingPlayRef.current) return;
+    const video = videoRef.current;
+    if (!video) return;
+    void video
+      .play()
+      .then(() => {
+        pendingPlayRef.current = false;
+      })
+      .catch(() => {
+        pendingPlayRef.current = false;
+      });
+  }, [videoRef]);
+
   const showVideo = useCallback(
-    (src: string, opts: { startTime?: number } = {}) => {
+    (src: string, opts: { startTime?: number; autoplay?: boolean } = {}) => {
       const video = videoRef.current;
       if (!video) return;
       const startTime =
@@ -166,6 +184,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
           ? opts.startTime
           : null;
 
+      pendingPlayRef.current = Boolean(opts.autoplay);
       video.classList.remove("hidden");
       const sameSrc = video.getAttribute("src") === src;
       if (!sameSrc) {
@@ -181,13 +200,15 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
         video.currentTime = 0;
       }
       syncFromVideo();
+      if (sameSrc) flushPendingPlay();
     },
-    [videoRef, applyResume, syncFromVideo]
+    [videoRef, applyResume, syncFromVideo, flushPendingPlay]
   );
 
   const hideVideo = useCallback(() => {
     persistTimeNow();
     pendingResumeRef.current = null;
+    pendingPlayRef.current = false;
     const video = videoRef.current;
     if (!video) return;
     video.pause();
@@ -407,9 +428,10 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
       syncFromVideo();
       persistTimeNow();
     };
-    const onEnded = () => {
+    const onEndedEvent = () => {
       syncFromVideo();
       if (Number.isFinite(video.duration)) onTimePersistRef.current?.(video.duration);
+      onEndedRef.current?.();
     };
     const onTimeUpdate = () => {
       syncFromVideo();
@@ -421,6 +443,10 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
         pendingResumeRef.current = null;
       }
       syncFromVideo();
+      flushPendingPlay();
+    };
+    const onCanPlay = () => {
+      flushPendingPlay();
     };
     const onVolumeChange = () => {
       if (!video.muted && video.volume > 0) lastVolumeRef.current = video.volume;
@@ -438,9 +464,10 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
 
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
-    video.addEventListener("ended", onEnded);
+    video.addEventListener("ended", onEndedEvent);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("loadedmetadata", onLoadedMetadata);
+    video.addEventListener("canplay", onCanPlay);
     video.addEventListener("volumechange", onVolumeChange);
     video.addEventListener("ratechange", onRateChange);
     video.addEventListener("emptied", onEmptied);
@@ -458,9 +485,10 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
     return () => {
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
-      video.removeEventListener("ended", onEnded);
+      video.removeEventListener("ended", onEndedEvent);
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("loadedmetadata", onLoadedMetadata);
+      video.removeEventListener("canplay", onCanPlay);
       video.removeEventListener("volumechange", onVolumeChange);
       video.removeEventListener("ratechange", onRateChange);
       video.removeEventListener("emptied", onEmptied);
@@ -483,6 +511,7 @@ export function useVideoPlayer(options: UseVideoPlayerOptions): UseVideoPlayerAp
     maybePersistTime,
     applyResume,
     isFullscreenActive,
+    flushPendingPlay,
   ]);
 
   // Keyboard

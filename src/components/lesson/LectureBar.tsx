@@ -7,17 +7,14 @@ import { cn } from "@/lib/utils";
 
 export function LectureBar() {
   const activeLessonId = useAppStore((s) => s.activeLessonId);
-  const lessons = useAppStore((s) => s.lessons);
   const lessonsById = useAppStore((s) => s.lessonsById);
   const categories = useAppStore((s) => s.categories);
   const completedLessonIds = useAppStore((s) => s.completedLessonIds);
-  const goToAdjacentLesson = useAppStore((s) => s.goToAdjacentLesson);
+  const autoplay = useAppStore((s) => s.autoplay);
   const markActiveComplete = useAppStore((s) => s.markActiveComplete);
+  const setAutoplay = useAppStore((s) => s.setAutoplay);
 
   const lesson = activeLessonId ? lessonsById[activeLessonId] : null;
-  const index = activeLessonId
-    ? lessons.findIndex((l) => l.id === activeLessonId)
-    : -1;
   const done = activeLessonId
     ? isLessonFinished(completedLessonIds, activeLessonId)
     : false;
@@ -33,22 +30,28 @@ export function LectureBar() {
             {lesson?.title || "Lecture title"}
           </h2>
         </div>
-        <div className="flex shrink-0 flex-wrap justify-end gap-2 max-[979px]:w-full">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 max-[979px]:w-full">
           <Button
             type="button"
             variant="outline"
-            disabled={index <= 0}
-            onClick={() => goToAdjacentLesson(-1)}
+            aria-pressed={autoplay}
+            title={
+              autoplay
+                ? "Autoplay is on — the next lecture starts when this one ends"
+                : "Autoplay is off — turn on to play the next lecture when this one ends"
+            }
+            onClick={() => setAutoplay(!autoplay)}
           >
-            Previous
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={index < 0 || index >= lessons.length - 1}
-            onClick={() => goToAdjacentLesson(1)}
-          >
-            Next
+            <CompletionCheck
+              checked={autoplay}
+              decorative
+              className={
+                autoplay
+                  ? "data-[state=checked]:border-accent data-[state=checked]:bg-accent"
+                  : "!border-[var(--btn-secondary-border)]"
+              }
+            />
+            Autoplay
           </Button>
           <Button
             type="button"
@@ -65,7 +68,6 @@ export function LectureBar() {
               checked={done}
               decorative
               className={
-                // Unchecked ring uses the same border token as outline buttons
                 done
                   ? undefined
                   : "!border-[var(--btn-secondary-border)]"

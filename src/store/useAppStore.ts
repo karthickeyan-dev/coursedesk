@@ -11,6 +11,7 @@ import type {
 } from "../types/course";
 
 import { pushCourseRoute, pushLibraryRoute } from "../lib/router";
+import { nextLessonId } from "./selectors";
 
 export type AppView = "library" | "course";
 export type SidebarTab = "content" | "files";
@@ -41,6 +42,8 @@ export interface AppStore {
 
   theme: Theme;
   curriculumOpen: boolean;
+  autoplay: boolean;
+  pendingAutoplayLessonId: string | null;
   sidebarTab: SidebarTab;
   openFileGroupId: string | null;
 
@@ -60,6 +63,10 @@ export interface AppStore {
   setOpenFileGroupId: (id: string | null) => void;
   goToAdjacentLesson: (delta: -1 | 1) => void;
   markActiveComplete: () => void;
+  markLessonFinished: (lessonId: string) => void;
+  setAutoplay: (on: boolean) => void;
+  clearPendingAutoplay: () => void;
+  onActiveLessonEnded: () => void;
 }
 
 function applyThemeToDom(theme: Theme): void {
@@ -77,6 +84,7 @@ function emptyCourseSlice() {
     notesByLessonId: {} as CourseNotesMap,
     completedLessonIds: [] as string[],
     openCategoryId: null as string | null,
+    pendingAutoplayLessonId: null as string | null,
     sidebarTab: "content" as SidebarTab,
     openFileGroupId: null as string | null,
   };
@@ -95,12 +103,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   theme: "dark",
   curriculumOpen: true,
+  autoplay: false,
 
   hydrateFromStorage: () => {
     const theme = Storage.loadTheme();
     const curriculumOpen = Storage.loadCurriculumOpen(true);
+    const autoplay = Storage.loadAutoplay(false);
     applyThemeToDom(theme);
-    set({ theme, curriculumOpen });
+    set({ theme, curriculumOpen, autoplay });
   },
 
   applyCoursesLoadState: (state) => {
@@ -193,7 +203,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   selectLesson: (lessonId) => {
-    const { activeCourse, lessonsById } = get();
+    const { activeCourse, lessonsById, pendingAutoplayLessonId } = get();
     if (!activeCourse) return;
     const lesson = lessonsById[lessonId];
     if (!lesson) return;
@@ -204,6 +214,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({
       activeLessonId: lessonId,
       openCategoryId: lesson.categoryId,
+      pendingAutoplayLessonId:
+        pendingAutoplayLessonId && pendingAutoplayLessonId !== lessonId
+          ? null
+          : pendingAutoplayLessonId,
     });
   },
 
@@ -280,5 +294,33 @@ export const useAppStore = create<AppStore>((set, get) => ({
   markActiveComplete: () => {
     const { activeLessonId, toggleFinished } = get();
     if (activeLessonId) toggleFinished(activeLessonId);
+  },
+
+  markLessonFinished: (lessonId) => {
+    const { activeCourse, completedLessonIds } = get();
+    if (!activeCourse || !lessonId) return;
+    if (completedLessonIds.includes(lessonId)) return;
+    const setIds = new Set(completedLessonIds);
+    setIds.add(lessonId);
+    Storage.saveFinishedIds(activeCourse.data.id, setIds);
+    set({ completedLessonIds: [...setIds] });
+  },
+
+  setAutoplay: (on) => {
+    Storage.saveAutoplay(on);
+    set({ autoplay: on });
+  },
+
+  clearPendingAutoplay: () => set({ pendingAutoplayLessonId: null }),
+
+  onActiveLessonEnded: () => {
+    const { activeLessonId, autoplay, markLessonFinished, selectLesson, lessons } =
+      get();
+    if (activeLessonId) markLessonFinished(activeLessonId);
+    if (!autoplay) return;
+    const nextId = nextLessonId(lessons, activeLessonId);
+    if (!nextId) return;
+    set({ pendingAutoplayLessonId: nextId });
+    selectLesson(nextId);
   },
 }));
