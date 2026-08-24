@@ -477,16 +477,54 @@ button {
   background: var(--code-bg);
   overflow: hidden;
 }
-.prose .code-block-lang {
+.prose .code-block-header {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  padding: 0.45rem 0.85rem 0;
+  gap: 0.5rem;
+  min-height: 2rem;
+  padding: 0.3rem 0.35rem 0 0.85rem;
+  user-select: none;
+}
+.prose .code-block-lang {
+  margin-right: auto;
   font-family: var(--mono);
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--code-lang);
+}
+.prose .code-block-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.28rem 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--code-lang);
+  font-family: var(--font);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  cursor: pointer;
+}
+.prose .code-block-copy:hover {
+  background: color-mix(in srgb, var(--code-fg) 10%, transparent);
+  color: var(--code-fg);
+}
+.prose .code-block-copy:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.prose .code-block-copy[data-copied="true"] {
+  color: var(--ok);
+}
+.prose .code-block-copy svg {
+  flex-shrink: 0;
 }
 .prose pre,
 .prose .code-block pre {
