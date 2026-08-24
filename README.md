@@ -62,7 +62,8 @@ Select the **root** folder that holds course packages:
   COURSE_TEMPLATE.md     # packaging guide (auto-written on first pick)
   my-course/
     course.js            # required — curriculum + metadata
-    notes.js             # optional — Markdown notes by lesson id
+    notes/               # optional — one Markdown file per lesson
+      001-welcome.md
     videos/              # lecture media
     assets/              # PDFs, images, downloads, …
   another-course/

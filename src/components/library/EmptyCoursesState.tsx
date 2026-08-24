@@ -118,7 +118,7 @@ export function EmptyCoursesState({
   ${PACKAGING_GUIDE_FILENAME}
   <course-id>/
     course.js      required
-    notes.js       optional
+    notes/         optional — one .md per lesson
     videos/
     assets/`}</pre>
             <ul className="m-0 list-disc space-y-1.5 pl-[1.15rem] text-[0.9rem] leading-relaxed text-muted">

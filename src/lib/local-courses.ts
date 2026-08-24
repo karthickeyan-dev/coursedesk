@@ -2,16 +2,21 @@
  * Local courses folder via File System Access API.
  * Sole course source: user-selected directory (no HTTP /courses server).
  */
+import type { CourseNotesMap } from "../types/course";
 import {
-  clearCoursesRootHandle,
-  loadCoursesRootHandle,
-  saveCoursesRootHandle,
-} from "./fs-handle-store";
+  mergeCourseNotes,
+  notesMapFromMarkdownFiles,
+} from "./course-notes-files";
 import {
   loadPackagingGuideMarkdown,
   PACKAGING_GUIDE_FILENAME,
   PACKAGING_GUIDE_URL,
 } from "./course-packaging-guide";
+import {
+  clearCoursesRootHandle,
+  loadCoursesRootHandle,
+  saveCoursesRootHandle,
+} from "./fs-handle-store";
 
 export type FolderPermissionState =
   | "none"
@@ -313,23 +318,81 @@ async function* directoryEntries(
 
 async function discoverCourseIds(
   root: FileSystemDirectoryHandle
-): Promise<{ id: string; hasNotes: boolean }[]> {
-  const entries: { id: string; hasNotes: boolean }[] = [];
+): Promise<string[]> {
+  const ids: string[] = [];
   for await (const [name, handle] of directoryEntries(root)) {
     if (handle.kind !== "directory") continue;
     const dir = handle as FileSystemDirectoryHandle;
     if (!(await hasFile(dir, "course.js"))) continue;
-    entries.push({
-      id: name,
-      hasNotes: await hasFile(dir, "notes.js"),
-    });
+    ids.push(name);
   }
-  entries.sort((a, b) => a.id.localeCompare(b.id));
-  return entries;
+  ids.sort((a, b) => a.localeCompare(b));
+  return ids;
+}
+
+function lessonIdsForFolder(folderId: string): Set<string> {
+  const reg = window.COURSES || {};
+  const data =
+    reg[folderId] ||
+    Object.values(reg).find((course) => course?.id === folderId);
+  const ids = new Set<string>();
+  for (const lesson of data?.lessons ?? []) {
+    if (lesson?.id) ids.add(lesson.id);
+  }
+  return ids;
+}
+
+async function readNotesMarkdownFolder(
+  courseDir: FileSystemDirectoryHandle,
+  lessonIds: Set<string>
+): Promise<CourseNotesMap> {
+  let notesDir: FileSystemDirectoryHandle;
+  try {
+    notesDir = await courseDir.getDirectoryHandle("notes");
+  } catch {
+    return {};
+  }
+  const files: Record<string, string> = {};
+  for await (const [name, handle] of directoryEntries(notesDir)) {
+    if (handle.kind !== "file") continue;
+    if (!name.toLowerCase().endsWith(".md")) continue;
+    try {
+      const file = await (handle as FileSystemFileHandle).getFile();
+      files[name] = await file.text();
+    } catch {
+      /* skip unreadable */
+    }
+  }
+  return notesMapFromMarkdownFiles(files, lessonIds);
+}
+
+async function loadNotesForCourse(
+  dir: FileSystemDirectoryHandle,
+  courseId: string
+): Promise<void> {
+  const lessonIds = lessonIdsForFolder(courseId);
+  const fromFiles = await readNotesMarkdownFolder(dir, lessonIds);
+
+  let fromScript: CourseNotesMap = {};
+  if (await hasFile(dir, "notes.js")) {
+    try {
+      const notesJs = await readTextFile(dir, "notes.js");
+      await runPackageScript(notesJs, `${courseId}/notes.js`);
+      fromScript = window.COURSE_NOTES?.[courseId] || {};
+    } catch {
+      /* optional */
+    }
+  }
+
+  const merged = mergeCourseNotes(fromFiles, fromScript);
+  window.COURSE_NOTES = window.COURSE_NOTES || {};
+  if (Object.keys(merged).length) {
+    window.COURSE_NOTES[courseId] = merged;
+  }
 }
 
 /**
- * Scan root handle, load course.js / notes.js into window.COURSES.
+ * Scan root handle, load course.js and notes into window.COURSES.
  * Requires an already-permissioned rootHandle.
  */
 export async function loadCoursesFromFolder(): Promise<LocalLoadResult> {
@@ -345,21 +408,14 @@ export async function loadCoursesFromFolder(): Promise<LocalLoadResult> {
   const discovered = await discoverCourseIds(rootHandle);
   const loaded: string[] = [];
 
-  for (const { id, hasNotes } of discovered) {
+  for (const id of discovered) {
     try {
       const dir = await rootHandle.getDirectoryHandle(id);
       courseDirs.set(id, dir);
       const courseJs = await readTextFile(dir, "course.js");
       await runPackageScript(courseJs, `${id}/course.js`);
       applyRoot(id);
-      if (hasNotes) {
-        try {
-          const notesJs = await readTextFile(dir, "notes.js");
-          await runPackageScript(notesJs, `${id}/notes.js`);
-        } catch {
-          /* optional */
-        }
-      }
+      await loadNotesForCourse(dir, id);
       loaded.push(id);
     } catch (err) {
       console.warn(

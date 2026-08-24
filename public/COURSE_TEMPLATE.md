@@ -15,8 +15,10 @@ After adding or changing a course, use **Settings → Rescan folder** (or reload
   COURSE_TEMPLATE.md           ← this guide (safe to regenerate from Settings)
   <course-id>/
     course.js                  # required — registers global.COURSES[<course-id>]
-    notes.js                   # optional — registers global.COURSE_NOTES[<course-id>]
+    notes/                     # optional — one Markdown file per lesson
+      001-welcome.md
     videos/                    # lecture videos (mp4, webm, …)
+      001-welcome.mp4
     assets/                    # optional images, pdfs, zip downloads, …
 ```
 
@@ -31,13 +33,15 @@ When present and non-empty, the player shows a **Files** tab in the course sideb
 |------|------|---------|
 | Course id / folder | kebab-case, stable, unique | `react-native-2026` |
 | Video files | Prefer `NNN-slug.ext` sort order | `001-welcome.mp4` |
+| Notes files | Same stem as lesson `id` | `notes/001-welcome.md` |
 | Lesson `id` | Stable slug; often mirrors video stem | `001-welcome` |
 | Lesson `num` | Display number string | `"01"` or `"001"` |
 | Category `id` | kebab-case | `getting-started` |
 | `video` path | Relative to course folder | `videos/001-welcome.mp4` |
 
-- `course.id`, folder name, `COURSES` key, and `COURSE_NOTES` key **must all match**.
+- `course.id`, folder name, and `COURSES` key **must all match**.
 - `course.root` may be `"courses/<course-id>"` (optional; the player resolves by folder id).
+- Do not add a `notes` path on the lesson object — the player maps `notes/<lesson-id>.md` by filename.
 
 ---
 
@@ -56,7 +60,7 @@ Group files into:
 
 - **Videos** → `<course-id>/videos/`
 - **Images / PDFs / downloads** → `<course-id>/assets/`
-- **Markdown / text notes** → content for `notes.js` (or omit)
+- **Markdown / text notes** → `<course-id>/notes/<lesson-id>.md` (or omit)
 - **Existing curriculum metadata** (CSV, JSON, Udemy export, filenames only)
 
 If the user only supplies videos, derive the curriculum from filenames and optional section folders.
@@ -145,20 +149,28 @@ resources: [
 ],
 ```
 
-### 6. Write `notes.js` (optional)
+### 6. Write notes (optional)
 
-```js
-(function (global) {
-  "use strict";
-  global.COURSE_NOTES = global.COURSE_NOTES || {};
-  global.COURSE_NOTES["my-course"] = {
-    "001-welcome": "## Welcome\n\nMarkdown notes…",
-  };
-})(typeof window !== "undefined" ? window : globalThis);
+One Markdown file per lesson, named after the lesson id:
+
+```bash
+mkdir -p <course-id>/notes
 ```
 
-- Outer key = course id; nested keys = lesson ids; values = Markdown strings.
-- If there are no notes, **omit** `notes.js` (do not leave an empty stub).
+```text
+<course-id>/notes/001-welcome.md
+```
+
+```md
+## Welcome
+
+Markdown notes for this lecture…
+```
+
+- Filename stem **must** match `lessons[].id` (`001-welcome.md` → lesson `001-welcome`).
+- Notes-only lessons: omit `video` in `course.js` and still add `notes/<id>.md`.
+- If there are no notes, **omit** the `notes/` folder (do not leave an empty stub).
+- Legacy `notes.js` still loads if present; a matching `.md` file wins for that lesson. Do not write new `notes.js` files.
 
 ### 7. No app registration
 
@@ -171,7 +183,7 @@ Drop the folder here and **Rescan** in the player.
 - [ ] Folder name === `id` === `COURSES` key
 - [ ] Every `lesson.video` file exists
 - [ ] Every `lesson.categoryId` exists in `categories`
-- [ ] Lesson ids unique; notes keys only use real lesson ids
+- [ ] Lesson ids unique; each `notes/<id>.md` stem is a real lesson id
 - [ ] Library card appears after Rescan; video / notes play
 
 ---
@@ -179,7 +191,7 @@ Drop the folder here and **Rescan** in the player.
 ## Updating an existing course
 
 1. Do **not** recreate the id/folder unless the user wants a new course.
-2. Add new videos to `videos/`, extend `lessons[]` and categories as needed.
+2. Add new videos to `videos/` and notes to `notes/<lesson-id>.md`; extend `lessons[]` and categories as needed.
 3. Keep existing lesson `id`s stable.
 4. Only renumber display `num` / titles if the user asks; avoid changing ids.
 
@@ -188,7 +200,7 @@ Drop the folder here and **Rescan** in the player.
 ## What not to do
 
 - Do not invent video filenames or precise durations.
-- Do not leave an empty `notes.js` if there are no notes — omit the file.
+- Do not leave an empty `notes/` folder or `notes.js` if there are no notes — omit them.
 - Do not put course details in the CourseDesk app source.
 - Do not nest courses more than one level deep under this root.
 
@@ -198,7 +210,8 @@ Drop the folder here and **Rescan** in the player.
 
 ```text
 User media → <this-folder>/<id>/{videos,assets}/
-Metadata   → <this-folder>/<id>/course.js  (+ notes.js)  ONLY
+Notes      → <this-folder>/<id>/notes/<lesson-id>.md
+Metadata   → <this-folder>/<id>/course.js  ONLY
 Discovery  → automatic (CourseDesk Rescan / reload)
 Never      → course details in app source or a shared catalog
 ```

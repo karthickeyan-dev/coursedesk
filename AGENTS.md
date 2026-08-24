@@ -64,6 +64,7 @@ src/
     storage.ts                # coursedesk.* localStorage only
     assets.ts                 # resolveCourseAssetUrl, library helpers
     notes.ts, format.ts
+    course-notes-files.ts     # notes/*.md → lesson-id map + notes.js merge
   styles/styles.css
   types/course.ts
 public/
@@ -79,8 +80,8 @@ netlify.toml                  # static deploy + SPA redirect
 ### Courses
 
 1. **Never** hardcode course ids or curricula in app source.
-2. Packages are IIFE scripts that set `window.COURSES` / `window.COURSE_NOTES`. **Never** `import()` `course.js`.
-3. Load path: pick/restore folder → scan children with `course.js` → eval via blob script tags → `buildAvailableCourses()`.
+2. Packages: `course.js` is an IIFE that sets `window.COURSES`. Notes are `notes/<lesson-id>.md` (legacy `notes.js` still fills missing keys). **Never** `import()` `course.js`.
+3. Load path: pick/restore folder → scan children with `course.js` → eval via blob script tags → read `notes/*.md` → `buildAvailableCourses()`.
 4. Media: `resolveCourseAssetUrl` → local `blob:` URLs. Lazy cache; revoke on rescan/unlink.
 5. Keep lesson `id`s stable — they are progress keys.
 
@@ -145,7 +146,7 @@ Permission re-grant often needs a **user gesture** (`requestPermission`).
 The user’s courses root (chosen in the app) is the workspace. Follow **`COURSE_TEMPLATE.md`** there:
 
 ```text
-<courses-root>/<course-id>/course.js   (+ notes.js, videos/, assets/)
+<courses-root>/<course-id>/course.js   (+ notes/<lesson-id>.md, videos/, assets/)
 ```
 
 Then **Rescan** in CourseDesk. Do not edit player source to register a course.
