@@ -1,12 +1,12 @@
 /**
  * Load courses from the user-selected local folder only.
- * Packages register on window.COURSES via classic script evaluation.
+ * Packages are course.json (legacy course.js still evaluates if JSON is absent).
  */
-import { buildAvailableCourses } from "./assets";
 import type { AvailableCourse } from "../types/course";
 import {
   ensureFolderAccess,
   getFolderStatus,
+  getLoadedCourses,
   isFsAccessSupported,
   loadCoursesFromFolder,
   packagingGuideExists,
@@ -47,8 +47,7 @@ function emptyStatus(supported: boolean): LocalFolderStatus {
 async function finishWithFolder(
   wroteGuide: boolean
 ): Promise<CoursesLoadState> {
-  const { folderName } = await loadCoursesFromFolder();
-  const courses = buildAvailableCourses();
+  const { folderName, courses } = await loadCoursesFromFolder();
   const folderStatus = await getFolderStatus();
   return {
     phase: "ready",
@@ -142,7 +141,7 @@ export async function selectAndLoadCoursesFolder(): Promise<CoursesLoadState> {
         : "no-folder";
       return {
         phase,
-        courses: phase === "ready" ? buildAvailableCourses() : [],
+        courses: phase === "ready" ? getLoadedCourses() : [],
         folderName: status.folderName,
         folderStatus: status,
         error: null,
@@ -188,7 +187,7 @@ export async function reauthorizeAndLoadCourses(): Promise<CoursesLoadState> {
   }
 }
 
-/** Rescan the linked folder (new courses, updated course.js). */
+/** Rescan the linked folder (new courses, updated course.json). */
 export async function rescanCoursesFolder(): Promise<CoursesLoadState> {
   try {
     const access = await ensureFolderAccess(true);

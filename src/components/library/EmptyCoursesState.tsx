@@ -54,7 +54,7 @@ export function EmptyCoursesState({
         ? `Your browser still has a link to “${folderName || "your courses folder"}”, but access must be confirmed again.`
         : kind === "no-courses"
           ? folderName
-            ? `Linked folder “${folderName}” has no valid packages yet. Add a subfolder with course.js, then rescan.`
+            ? `Linked folder “${folderName}” has no valid packages yet. Add a subfolder with course.json, then rescan.`
             : "Add course packages to your folder, then rescan."
           : kind === "error"
             ? error || "Could not load courses from the selected folder."
@@ -117,7 +117,7 @@ export function EmptyCoursesState({
             <pre className="mb-3.5 overflow-x-auto rounded-lg border border-border bg-code-bg px-4 py-3.5 font-mono text-xs leading-relaxed whitespace-pre text-code-fg">{`<courses-root>/
   ${PACKAGING_GUIDE_FILENAME}
   <course-id>/
-    course.js      required
+    course.json    required
     notes/         optional — one .md per lesson
     videos/
     assets/`}</pre>
@@ -126,20 +126,16 @@ export function EmptyCoursesState({
                 Each course is a <strong className="text-text">subfolder</strong>{" "}
                 with a{" "}
                 <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
-                  course.js
+                  course.json
                 </code>{" "}
                 file
               </li>
               <li>
-                Folder name, course{" "}
+                Folder name and course{" "}
                 <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
                   id
-                </code>
-                , and{" "}
-                <code className="rounded bg-panel-2 px-1.5 py-px font-mono text-[0.84em] text-text">
-                  COURSES
                 </code>{" "}
-                key must match (kebab-case)
+                must match (kebab-case)
               </li>
               <li>
                 Video paths are relative (e.g.{" "}

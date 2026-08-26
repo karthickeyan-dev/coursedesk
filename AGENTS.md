@@ -57,13 +57,14 @@ src/
   store/           # Zustand (useAppStore), boot, selectors
   lib/
     utils.ts                  # cn() for shadcn class merge
-    local-courses.ts          # folder pick, scan, scripts, blob URLs
+    local-courses.ts          # folder pick, scan, JSON/JS packages, blob URLs
     fs-handle-store.ts        # IndexedDB for FileSystemDirectoryHandle
     course-loader.ts          # boot / select / rescan / clear flows
     course-packaging-guide.ts # filename + load/download helpers
     storage.ts                # coursedesk.* localStorage only
     assets.ts                 # resolveCourseAssetUrl, library helpers
     notes.ts, format.ts
+    course-package.ts         # parse course.json → CourseData
     course-notes-files.ts     # notes/*.md → lesson-id map + notes.js merge
   styles/styles.css
   types/course.ts
@@ -80,8 +81,8 @@ netlify.toml                  # static deploy + SPA redirect
 ### Courses
 
 1. **Never** hardcode course ids or curricula in app source.
-2. Packages: `course.js` is an IIFE that sets `window.COURSES`. Notes are `notes/<lesson-id>.md` (legacy `notes.js` still fills missing keys). **Never** `import()` `course.js`.
-3. Load path: pick/restore folder → scan children with `course.js` → eval via blob script tags → read `notes/*.md` → `buildAvailableCourses()`.
+2. Packages: `course.json` is the curriculum object. Notes are `notes/<lesson-id>.md`. **Never** `import()` a course package. Legacy `course.js` (IIFE on `window.COURSES`) still loads if JSON is absent; `notes.js` still fills missing keys on that path only.
+3. Load path: pick/restore folder → scan children with `course.json` (or `course.js`) → `JSON.parse` (or script eval) → read `notes/*.md` → `AvailableCourse[]`.
 4. Media: `resolveCourseAssetUrl` → local `blob:` URLs. Lazy cache; revoke on rescan/unlink.
 5. Keep lesson `id`s stable — they are progress keys.
 
@@ -146,7 +147,7 @@ Permission re-grant often needs a **user gesture** (`requestPermission`).
 The user’s courses root (chosen in the app) is the workspace. Follow **`COURSE_TEMPLATE.md`** there:
 
 ```text
-<courses-root>/<course-id>/course.js   (+ notes/<lesson-id>.md, videos/, assets/)
+<courses-root>/<course-id>/course.json   (+ notes/<lesson-id>.md, videos/, assets/)
 ```
 
 Then **Rescan** in CourseDesk. Do not edit player source to register a course.

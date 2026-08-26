@@ -2,11 +2,17 @@
  * Local courses folder via File System Access API.
  * Sole course source: user-selected directory (no HTTP /courses server).
  */
-import type { CourseNotesMap } from "../types/course";
+import type { AvailableCourse, CourseData, CourseNotesMap } from "../types/course";
 import {
   mergeCourseNotes,
   notesMapFromMarkdownFiles,
 } from "./course-notes-files";
+import {
+  availableCourseFromPackage,
+  COURSE_PACKAGE_FILENAME,
+  LEGACY_COURSE_SCRIPT_FILENAME,
+  parseCoursePackage,
+} from "./course-package";
 import {
   loadPackagingGuideMarkdown,
   PACKAGING_GUIDE_FILENAME,
@@ -35,6 +41,7 @@ export interface LocalFolderStatus {
 export interface LocalLoadResult {
   ids: string[];
   folderName: string;
+  courses: AvailableCourse[];
 }
 
 type PermissionMode = "read" | "readwrite";
@@ -44,6 +51,12 @@ let rootHandle: FileSystemDirectoryHandle | null = null;
 const courseDirs = new Map<string, FileSystemDirectoryHandle>();
 /** blob: URLs keyed by `${courseId}\\0${normalizedRelPath}` */
 const blobCache = new Map<string, string>();
+/** Last successful scan — used when a folder picker is cancelled. */
+let lastLoadedCourses: AvailableCourse[] = [];
+
+export function getLoadedCourses(): AvailableCourse[] {
+  return lastLoadedCourses;
+}
 
 export function isFsAccessSupported(): boolean {
   return (
@@ -86,6 +99,7 @@ export function revokeAllBlobUrls(): void {
 export function clearLocalSession(): void {
   revokeAllBlobUrls();
   courseDirs.clear();
+  lastLoadedCourses = [];
   rootHandle = null;
   if (typeof window !== "undefined") {
     window.COURSES = {};
@@ -281,20 +295,14 @@ async function runPackageScript(source: string, label: string): Promise<void> {
   }
 }
 
-function applyRoot(folderId: string): void {
+function courseDataFromJsRegistry(folderId: string): CourseData | null {
   const reg = window.COURSES || {};
-  const data = reg[folderId];
-  if (data) {
-    data.root = `courses/${folderId}`;
-    if (!data.id) data.id = folderId;
-    return;
-  }
-  for (const [key, course] of Object.entries(reg)) {
-    if (!course?.root && (course.id === folderId || key === folderId)) {
-      course.root = `courses/${folderId}`;
-      if (!course.id) course.id = folderId;
-    }
-  }
+  const data =
+    reg[folderId] || Object.values(reg).find((course) => course?.id === folderId);
+  if (!data || !Array.isArray(data.lessons)) return null;
+  data.root = `courses/${folderId}`;
+  data.id = folderId;
+  return data;
 }
 
 async function* directoryEntries(
@@ -316,27 +324,28 @@ async function* directoryEntries(
   }
 }
 
-async function discoverCourseIds(
+type PackageFormat = "json" | "js";
+
+async function discoverCourseFolders(
   root: FileSystemDirectoryHandle
-): Promise<string[]> {
-  const ids: string[] = [];
+): Promise<{ id: string; format: PackageFormat }[]> {
+  const found: { id: string; format: PackageFormat }[] = [];
   for await (const [name, handle] of directoryEntries(root)) {
     if (handle.kind !== "directory") continue;
     const dir = handle as FileSystemDirectoryHandle;
-    if (!(await hasFile(dir, "course.js"))) continue;
-    ids.push(name);
+    if (await hasFile(dir, COURSE_PACKAGE_FILENAME)) {
+      found.push({ id: name, format: "json" });
+    } else if (await hasFile(dir, LEGACY_COURSE_SCRIPT_FILENAME)) {
+      found.push({ id: name, format: "js" });
+    }
   }
-  ids.sort((a, b) => a.localeCompare(b));
-  return ids;
+  found.sort((a, b) => a.id.localeCompare(b.id));
+  return found;
 }
 
-function lessonIdsForFolder(folderId: string): Set<string> {
-  const reg = window.COURSES || {};
-  const data =
-    reg[folderId] ||
-    Object.values(reg).find((course) => course?.id === folderId);
+function lessonIdsFromData(data: CourseData): Set<string> {
   const ids = new Set<string>();
-  for (const lesson of data?.lessons ?? []) {
+  for (const lesson of data.lessons) {
     if (lesson?.id) ids.add(lesson.id);
   }
   return ids;
@@ -368,31 +377,44 @@ async function readNotesMarkdownFolder(
 
 async function loadNotesForCourse(
   dir: FileSystemDirectoryHandle,
-  courseId: string
-): Promise<void> {
-  const lessonIds = lessonIdsForFolder(courseId);
+  data: CourseData,
+  allowLegacyNotesJs: boolean
+): Promise<CourseNotesMap> {
+  const lessonIds = lessonIdsFromData(data);
   const fromFiles = await readNotesMarkdownFolder(dir, lessonIds);
+  if (!allowLegacyNotesJs) return fromFiles;
 
   let fromScript: CourseNotesMap = {};
   if (await hasFile(dir, "notes.js")) {
     try {
       const notesJs = await readTextFile(dir, "notes.js");
-      await runPackageScript(notesJs, `${courseId}/notes.js`);
-      fromScript = window.COURSE_NOTES?.[courseId] || {};
+      await runPackageScript(notesJs, `${data.id}/notes.js`);
+      fromScript = window.COURSE_NOTES?.[data.id] || {};
     } catch {
       /* optional */
     }
   }
 
-  const merged = mergeCourseNotes(fromFiles, fromScript);
-  window.COURSE_NOTES = window.COURSE_NOTES || {};
-  if (Object.keys(merged).length) {
-    window.COURSE_NOTES[courseId] = merged;
+  return mergeCourseNotes(fromFiles, fromScript);
+}
+
+async function loadLegacyCourseScript(
+  dir: FileSystemDirectoryHandle,
+  folderId: string
+): Promise<CourseData> {
+  const courseJs = await readTextFile(dir, LEGACY_COURSE_SCRIPT_FILENAME);
+  await runPackageScript(courseJs, `${folderId}/${LEGACY_COURSE_SCRIPT_FILENAME}`);
+  const data = courseDataFromJsRegistry(folderId);
+  if (!data) {
+    throw new Error(
+      `${LEGACY_COURSE_SCRIPT_FILENAME} did not register a course for "${folderId}"`
+    );
   }
+  return data;
 }
 
 /**
- * Scan root handle, load course.js and notes into window.COURSES.
+ * Scan root handle, load course.json (or legacy course.js) and notes.
  * Requires an already-permissioned rootHandle.
  */
 export async function loadCoursesFromFolder(): Promise<LocalLoadResult> {
@@ -402,21 +424,23 @@ export async function loadCoursesFromFolder(): Promise<LocalLoadResult> {
 
   revokeAllBlobUrls();
   courseDirs.clear();
+  lastLoadedCourses = [];
   window.COURSES = {};
   window.COURSE_NOTES = {};
 
-  const discovered = await discoverCourseIds(rootHandle);
-  const loaded: string[] = [];
+  const discovered = await discoverCourseFolders(rootHandle);
+  const courses: AvailableCourse[] = [];
 
-  for (const id of discovered) {
+  for (const { id, format } of discovered) {
     try {
       const dir = await rootHandle.getDirectoryHandle(id);
       courseDirs.set(id, dir);
-      const courseJs = await readTextFile(dir, "course.js");
-      await runPackageScript(courseJs, `${id}/course.js`);
-      applyRoot(id);
-      await loadNotesForCourse(dir, id);
-      loaded.push(id);
+      const data =
+        format === "json"
+          ? parseCoursePackage(await readTextFile(dir, COURSE_PACKAGE_FILENAME), id)
+          : await loadLegacyCourseScript(dir, id);
+      const notes = await loadNotesForCourse(dir, data, format === "js");
+      courses.push(availableCourseFromPackage(data, notes));
     } catch (err) {
       console.warn(
         `[CourseDesk] Skipping "${id}":`,
@@ -426,7 +450,8 @@ export async function loadCoursesFromFolder(): Promise<LocalLoadResult> {
     }
   }
 
-  return { ids: loaded, folderName: rootHandle.name };
+  lastLoadedCourses = courses;
+  return { ids: courses.map((c) => c.data.id), folderName: rootHandle.name, courses };
 }
 
 async function resolveFileInCourse(

@@ -49,27 +49,3 @@ export function categoryTitle(
   const cat = categories.find((c) => c.id === lesson.categoryId);
   return cat ? cat.title : "";
 }
-
-export function buildAvailableCourses(): AvailableCourse[] {
-  const registry = window.COURSES || {};
-  const notesRegistry = window.COURSE_NOTES || {};
-  const result: AvailableCourse[] = [];
-
-  for (const id of Object.keys(registry).sort()) {
-    const data = registry[id];
-    if (!data || !Array.isArray(data.lessons)) continue;
-    const courseId = data.id || id;
-    result.push({
-      meta: {
-        id: courseId,
-        title: data.title,
-        author: data.author,
-        description: data.description,
-      },
-      data,
-      notes: notesRegistry[courseId] || notesRegistry[id] || {},
-    });
-  }
-
-  return result;
-}

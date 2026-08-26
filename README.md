@@ -61,17 +61,17 @@ Select the **root** folder that holds course packages:
 <courses-root>/
   COURSE_TEMPLATE.md     # packaging guide (auto-written on first pick)
   my-course/
-    course.js            # required — curriculum + metadata
+    course.json          # required — curriculum + metadata
     notes/               # optional — one Markdown file per lesson
       001-welcome.md
     videos/              # lecture media
     assets/              # PDFs, images, downloads, …
   another-course/
-    course.js
+    course.json
     videos/
 ```
 
-**Discovery:** any **immediate child** of the root that contains `course.js` is a course.
+**Discovery:** any **immediate child** of the root that contains `course.json` is a course. (A legacy `course.js` still loads if JSON is missing.)
 
 **After adding or editing a package on disk:** Settings → **Rescan folder** (or reload the page once access is already granted).
 

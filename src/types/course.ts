@@ -1,4 +1,4 @@
-/** Lesson within a course package (courses/<id>/course.js). */
+/** Lesson within a course package (`<id>/course.json`). */
 export interface Lesson {
   id: string;
   title: string;
@@ -23,7 +23,7 @@ export interface CourseResource {
   group?: string;
 }
 
-/** Curriculum + metadata registered by course.js. */
+/** Curriculum + metadata from course.json (or a legacy course.js package). */
 export interface CourseData {
   id: string;
   root?: string;
