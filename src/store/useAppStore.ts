@@ -49,7 +49,6 @@ export interface AppStore {
 
   hydrateFromStorage: () => void;
   applyCoursesLoadState: (state: CoursesLoadState) => void;
-  setCourses: (courses: AvailableCourse[]) => void;
   openCourse: (courseId: string, options?: NavigationOptions) => void;
   showLibrary: (options?: NavigationOptions) => void;
   selectLesson: (lessonId: string) => void;
@@ -71,6 +70,15 @@ export interface AppStore {
 
 function applyThemeToDom(theme: Theme): void {
   document.documentElement.setAttribute("data-theme", theme);
+}
+
+function commitFinished(
+  courseId: string,
+  ids: Set<string>,
+  set: (partial: { completedLessonIds: string[] }) => void
+): void {
+  Storage.saveFinishedIds(courseId, ids);
+  set({ completedLessonIds: [...ids] });
 }
 
 function emptyCourseSlice() {
@@ -125,16 +133,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     });
   },
 
-  setCourses: (courses) => {
-    Storage.pruneCourses(courses.map((c) => c.data.id));
-    set({
-      courses,
-      coursesLoaded: true,
-      coursesError: null,
-      coursesPhase: "ready",
-    });
-  },
-
   openCourse: (courseId, options) => {
     const course = get().courses.find((c) => c.data.id === courseId);
     if (!course) return;
@@ -161,8 +159,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
         : lessons[0]
           ? lessons[0].id
           : null;
-
-    Storage.saveActiveCourseId(course.data.id);
 
     set({
       view: "course",
@@ -195,7 +191,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
     if (!options?.skipHistory) {
       pushLibraryRoute();
     }
-    Storage.saveActiveCourseId(null);
     set({
       view: "library",
       ...emptyCourseSlice(),
@@ -227,8 +222,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const setIds = new Set(completedLessonIds);
     if (setIds.has(lessonId)) setIds.delete(lessonId);
     else setIds.add(lessonId);
-    Storage.saveFinishedIds(activeCourse.data.id, setIds);
-    set({ completedLessonIds: [...setIds] });
+    commitFinished(activeCourse.data.id, setIds, set);
   },
 
   toggleSectionFinished: (lessonIds) => {
@@ -240,8 +234,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       if (allDone) setIds.delete(id);
       else setIds.add(id);
     }
-    Storage.saveFinishedIds(activeCourse.data.id, setIds);
-    set({ completedLessonIds: [...setIds] });
+    commitFinished(activeCourse.data.id, setIds, set);
   },
 
   setOpenCategory: (categoryId) => {
@@ -302,8 +295,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     if (completedLessonIds.includes(lessonId)) return;
     const setIds = new Set(completedLessonIds);
     setIds.add(lessonId);
-    Storage.saveFinishedIds(activeCourse.data.id, setIds);
-    set({ completedLessonIds: [...setIds] });
+    commitFinished(activeCourse.data.id, setIds, set);
   },
 
   setAutoplay: (on) => {

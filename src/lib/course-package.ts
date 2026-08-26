@@ -39,14 +39,5 @@ export function availableCourseFromPackage(
   data: CourseData,
   notes: CourseNotesMap = {}
 ): AvailableCourse {
-  return {
-    meta: {
-      id: data.id,
-      title: data.title,
-      author: data.author,
-      description: data.description,
-    },
-    data,
-    notes,
-  };
+  return { data, notes };
 }

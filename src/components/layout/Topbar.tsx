@@ -1,6 +1,7 @@
 import { ChevronLeft, Moon, PanelRight, Sun } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/button";
+import { courseAuthor, courseTitle } from "@/lib/assets";
 import { useAppStore } from "@/store/useAppStore";
 import { ProgressPill } from "./ProgressPill";
 import { SettingsMenu } from "./SettingsMenu";
@@ -19,12 +20,8 @@ export function Topbar() {
   const setCurriculumOpen = useAppStore((s) => s.setCurriculumOpen);
 
   const inCourse = view === "course" && activeCourse;
-  const title = inCourse
-    ? activeCourse.data.title || activeCourse.meta.title || "Course"
-    : "Your courses";
-  const label = inCourse
-    ? activeCourse.data.author || activeCourse.meta.author || "Course"
-    : "CourseDesk";
+  const title = inCourse ? courseTitle(activeCourse) : "Your courses";
+  const label = inCourse ? courseAuthor(activeCourse, "Course") : "CourseDesk";
 
   const handleBack = () => {
     if (window.history.state?.fromApp) {

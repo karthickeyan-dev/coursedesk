@@ -28,6 +28,13 @@ function idbReq<T>(req: IDBRequest<T>): Promise<T> {
   });
 }
 
+function awaitTx(tx: IDBTransaction): Promise<void> {
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error ?? new Error("IndexedDB tx failed"));
+  });
+}
+
 export async function saveCoursesRootHandle(
   handle: FileSystemDirectoryHandle
 ): Promise<void> {
@@ -35,10 +42,7 @@ export async function saveCoursesRootHandle(
   try {
     const tx = db.transaction(STORE, "readwrite");
     await idbReq(tx.objectStore(STORE).put(handle, ROOT_KEY));
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error ?? new Error("IndexedDB tx failed"));
-    });
+    await awaitTx(tx);
   } finally {
     db.close();
   }
@@ -62,10 +66,7 @@ export async function clearCoursesRootHandle(): Promise<void> {
   try {
     const tx = db.transaction(STORE, "readwrite");
     await idbReq(tx.objectStore(STORE).delete(ROOT_KEY));
-    await new Promise<void>((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error ?? new Error("IndexedDB tx failed"));
-    });
+    await awaitTx(tx);
   } finally {
     db.close();
   }

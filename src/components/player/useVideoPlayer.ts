@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { applyResumeSeconds, formatRate, formatTime } from "../../lib/format";
+import { applyResumeSeconds, formatRate, formatTime } from "@/lib/format";
+import { isEditableTarget } from "@/lib/keyboard";
 import {
   exitFullscreen,
   getFullscreenElement,
@@ -16,7 +17,6 @@ import {
   type PlayerUiState,
 } from "./playerTypes";
 
-// Re-export for stable consumer import paths (PlayerControls, PlayerHud, App).
 export {
   HUD_MS,
   PERSIST_MS,
@@ -27,29 +27,6 @@ export {
   type HudState,
   type PlayerUiState,
 } from "./playerTypes";
-
-export function isEditableTarget(target: EventTarget | null): boolean {
-  if (!target || !(target instanceof Element)) return false;
-  const tag = target.tagName;
-  if (tag === "TEXTAREA" || tag === "SELECT") return true;
-  if (tag === "INPUT") {
-    const type = (target.getAttribute("type") || "text").toLowerCase();
-    return ![
-      "button",
-      "checkbox",
-      "color",
-      "file",
-      "hidden",
-      "image",
-      "radio",
-      "range",
-      "reset",
-      "submit",
-    ].includes(type);
-  }
-  if ((target as HTMLElement).isContentEditable) return true;
-  return !!target.closest("[contenteditable='true']");
-}
 
 export interface UseVideoPlayerOptions {
   videoRef: RefObject<HTMLVideoElement | null>;

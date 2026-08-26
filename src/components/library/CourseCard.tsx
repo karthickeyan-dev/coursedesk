@@ -1,17 +1,16 @@
-import { sumLessonDurations } from "../../lib/assets";
-import { courseMonogram, formatDurationTotal } from "../../lib/format";
-import * as Storage from "../../lib/storage";
-import type { AvailableCourse } from "../../types/course";
-import { useAppStore } from "../../store/useAppStore";
+import { courseAuthor, courseProgress, courseTitle } from "@/lib/assets";
+import { courseMonogram, formatDurationTotal } from "@/lib/format";
+import * as Storage from "@/lib/storage";
+import type { AvailableCourse } from "@/types/course";
+import { useAppStore } from "@/store/useAppStore";
 
 function cardProgress(course: AvailableCourse) {
   const lessons = course.data.lessons || [];
-  const finished = Storage.loadFinishedIds(course.data.id);
-  const done = lessons.reduce((n, l) => n + (finished.has(l.id) ? 1 : 0), 0);
-  const total = lessons.length;
-  const percent = total ? Math.round((done / total) * 100) : 0;
-  const seconds = sumLessonDurations(lessons);
-  const duration = seconds > 0 ? formatDurationTotal(seconds) : "";
+  const { total, done, percent, totalSeconds } = courseProgress(
+    lessons,
+    Storage.loadFinishedIds(course.data.id)
+  );
+  const duration = totalSeconds > 0 ? formatDurationTotal(totalSeconds) : "";
   const progressLabel =
     percent === 0
       ? "Not started"
@@ -39,8 +38,8 @@ export function CourseCard({
   index: number;
 }) {
   const openCourse = useAppStore((s) => s.openCourse);
-  const title = course.data.title || course.meta.title || "Course";
-  const author = course.data.author || course.meta.author || "Course";
+  const title = courseTitle(course);
+  const author = courseAuthor(course, "Course");
   const { total, percent, duration, progressLabel } = cardProgress(course);
   const hue = cardHue(course.data.id, index);
 

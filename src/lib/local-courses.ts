@@ -66,14 +66,6 @@ export function isFsAccessSupported(): boolean {
   );
 }
 
-export function getRootHandle(): FileSystemDirectoryHandle | null {
-  return rootHandle;
-}
-
-export function getLinkedFolderName(): string | null {
-  return rootHandle?.name ?? null;
-}
-
 function cacheKey(courseId: string, relPath: string): string {
   return `${courseId}\0${relPath}`;
 }
@@ -107,33 +99,21 @@ export function clearLocalSession(): void {
   }
 }
 
-async function queryPerm(
+async function perm(
   handle: FileSystemDirectoryHandle,
-  mode: PermissionMode
+  mode: PermissionMode,
+  action: "query" | "request"
 ): Promise<PermissionState | "unknown"> {
   const h = handle as FileSystemDirectoryHandle & {
     queryPermission?: (desc: { mode?: PermissionMode }) => Promise<PermissionState>;
-  };
-  if (typeof h.queryPermission !== "function") return "granted";
-  try {
-    return await h.queryPermission({ mode });
-  } catch {
-    return "unknown";
-  }
-}
-
-async function requestPerm(
-  handle: FileSystemDirectoryHandle,
-  mode: PermissionMode
-): Promise<PermissionState | "unknown"> {
-  const h = handle as FileSystemDirectoryHandle & {
     requestPermission?: (desc: { mode?: PermissionMode }) => Promise<PermissionState>;
   };
-  if (typeof h.requestPermission !== "function") return "granted";
+  const fn = action === "query" ? h.queryPermission : h.requestPermission;
+  if (typeof fn !== "function") return "granted";
   try {
-    return await h.requestPermission({ mode });
+    return await fn.call(h, { mode });
   } catch {
-    return "denied";
+    return action === "query" ? "unknown" : "denied";
   }
 }
 
@@ -162,9 +142,9 @@ export async function getFolderStatus(): Promise<LocalFolderStatus> {
 
   if (!rootHandle) rootHandle = handle;
 
-  const write = await queryPerm(handle, "readwrite");
+  const write = await perm(handle, "readwrite", "query");
   const read =
-    write === "granted" ? "granted" : await queryPerm(handle, "read");
+    write === "granted" ? "granted" : await perm(handle, "read", "query");
 
   let permission: FolderPermissionState = "prompt";
   if (read === "granted") permission = "granted";
@@ -187,36 +167,32 @@ export async function ensureFolderAccess(
   if (!rootHandle) return { ok: false, canWrite: false };
 
   if (preferWrite) {
-    const w = await queryPerm(rootHandle, "readwrite");
+    const w = await perm(rootHandle, "readwrite", "query");
     if (w === "granted") return { ok: true, canWrite: true };
     if (w === "prompt") {
-      const rw = await requestPerm(rootHandle, "readwrite");
+      const rw = await perm(rootHandle, "readwrite", "request");
       if (rw === "granted") return { ok: true, canWrite: true };
     }
   }
 
-  const r = await queryPerm(rootHandle, "read");
+  const r = await perm(rootHandle, "read", "query");
   if (r === "granted") return { ok: true, canWrite: false };
   if (r === "prompt") {
-    const rr = await requestPerm(rootHandle, "read");
+    const rr = await perm(rootHandle, "read", "request");
     if (rr === "granted") return { ok: true, canWrite: false };
   }
   return { ok: false, canWrite: false };
 }
 
+const FS_UNSUPPORTED =
+  "This browser does not support local folder access. Use Chrome or Edge on desktop.";
+
 export async function pickCoursesFolder(): Promise<FileSystemDirectoryHandle> {
-  if (!isFsAccessSupported()) {
-    throw new Error(
-      "This browser does not support local folder access. Use Chrome or Edge on desktop."
-    );
+  const pick = window.showDirectoryPicker;
+  if (!isFsAccessSupported() || typeof pick !== "function") {
+    throw new Error(FS_UNSUPPORTED);
   }
 
-  const pick = window.showDirectoryPicker;
-  if (typeof pick !== "function") {
-    throw new Error(
-      "This browser does not support local folder access. Use Chrome or Edge on desktop."
-    );
-  }
   const handle = await pick({
     id: "coursedesk-courses",
     mode: "readwrite",

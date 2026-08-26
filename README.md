@@ -36,7 +36,6 @@ pnpm start
 | `pnpm lint:fix` | Biome lint with auto-fix |
 | `pnpm typecheck` | TypeScript check |
 | `pnpm check` | Lint + typecheck |
-| `pnpm test` | Unit tests |
 
 ## Deploy (static host)
 

@@ -1,16 +1,17 @@
 /**
  * localStorage — prefs + per-course progress.
- * Keys are stable (do not rename): theme, sidebar, activeCourse, courses.
+ * Keys are stable (do not rename): theme, sidebar, autoplay, courses.
  */
 
 const P = "coursedesk";
 const K = {
   theme: `${P}.theme`,
   sidebar: `${P}.sidebar`,
-  active: `${P}.activeCourse`,
   courses: `${P}.courses`,
   autoplay: `${P}.autoplay`,
 } as const;
+/** Legacy key — routing restores the open course; drop leftover values. */
+const LEGACY_ACTIVE = `${P}.activeCourse`;
 
 export type Theme = "dark" | "light";
 
@@ -117,31 +118,28 @@ export const loadTheme = (): Theme => (get(K.theme) === "light" ? "light" : "dar
 export const saveTheme = (theme: Theme): void =>
   set(K.theme, theme === "light" ? "light" : "dark");
 
-export function loadCurriculumOpen(defaultOpen: boolean): boolean {
-  const v = get(K.sidebar);
+function loadFlag(key: string, defaultValue: boolean): boolean {
+  const v = get(key);
   if (v === "0") return false;
   if (v === "1") return true;
-  return defaultOpen;
+  return defaultValue;
 }
 
-export const saveCurriculumOpen = (open: boolean): void =>
-  set(K.sidebar, open ? "1" : "0");
+function saveFlag(key: string, on: boolean): void {
+  set(key, on ? "1" : "0");
+}
+
+export function loadCurriculumOpen(defaultOpen: boolean): boolean {
+  return loadFlag(K.sidebar, defaultOpen);
+}
+
+export const saveCurriculumOpen = (open: boolean): void => saveFlag(K.sidebar, open);
 
 export function loadAutoplay(defaultOn = false): boolean {
-  const v = get(K.autoplay);
-  if (v === "0") return false;
-  if (v === "1") return true;
-  return defaultOn;
+  return loadFlag(K.autoplay, defaultOn);
 }
 
-export const saveAutoplay = (on: boolean): void => set(K.autoplay, on ? "1" : "0");
-
-export const loadActiveCourseId = (): string | null => get(K.active) || null;
-
-export function saveActiveCourseId(courseId: string | null): void {
-  if (courseId) set(K.active, courseId);
-  else del(K.active);
-}
+export const saveAutoplay = (on: boolean): void => saveFlag(K.autoplay, on);
 
 export function loadFinishedIds(courseId: string | null | undefined): Set<string> {
   if (!courseId) return new Set();
@@ -218,11 +216,5 @@ export function pruneCourses(validIds: Iterable<string>): void {
     }
   }
   if (changed) saveMap();
-  const active = loadActiveCourseId();
-  if (active && !valid.has(active)) saveActiveCourseId(null);
-}
-
-/** Test helper — clears in-memory cache so localStorage is re-read. */
-export function resetStorageCache(): void {
-  cache = null;
+  del(LEGACY_ACTIVE);
 }

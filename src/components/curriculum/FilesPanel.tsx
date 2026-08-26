@@ -1,14 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, Download, ExternalLink } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { resolveCourseAssetUrl } from "@/lib/assets";
 import { canViewInBrowser, fileBasename } from "@/lib/format";
 import { FileTypeIcon } from "./FileTypeIcon";
+import { SidebarGroup } from "./SidebarGroup";
 import type { CourseResource } from "@/types/course";
 import { useAppStore } from "@/store/useAppStore";
 import { cn } from "@/lib/utils";
@@ -152,55 +148,19 @@ export function FilesPanel() {
         if (!items.length) return null;
         const open = openFileGroupId === groupName;
         return (
-          <Collapsible
+          <SidebarGroup
             key={groupName}
             open={open}
-            onOpenChange={(next) =>
-              setOpenFileGroupId(next ? groupName : null)
-            }
-            className="block w-full border-b border-border"
-            data-file-group={groupName}
+            onOpenChange={(next) => setOpenFileGroupId(next ? groupName : null)}
+            title={groupName}
+            meta={`${items.length} file${items.length === 1 ? "" : "s"}`}
+            dataFileGroup={groupName}
           >
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="grid w-full min-w-0 grid-cols-[1fr_auto] items-center gap-2 border-0 bg-panel-2 px-4 py-3.5 text-left text-text hover:bg-[color-mix(in_srgb,var(--text)_7%,var(--panel-2))]"
-              >
-                <span className="flex min-w-0 flex-col gap-1">
-                  <span className="text-sm leading-snug font-semibold">
-                    {groupName}
-                  </span>
-                  <span className="text-left text-xs font-medium text-muted-2 tabular-nums">
-                    {items.length} file{items.length === 1 ? "" : "s"}
-                  </span>
-                </span>
-                <span className="grid place-items-center">
-                  <ChevronRight
-                    size={16}
-                    strokeWidth={2}
-                    className={cn(
-                      "block text-muted-2 transition-transform duration-150",
-                      open && "rotate-90"
-                    )}
-                    aria-hidden
-                  />
-                </span>
-              </button>
-            </CollapsibleTrigger>
-
-            <CollapsibleContent className="block w-full bg-elevated">
-              {items.map((item) => {
-                const key = item.id || item.path;
-                return (
-                  <ResourceRow
-                    key={key}
-                    item={item}
-                    href={hrefById[key]}
-                  />
-                );
-              })}
-            </CollapsibleContent>
-          </Collapsible>
+            {items.map((item) => {
+              const key = item.id || item.path;
+              return <ResourceRow key={key} item={item} href={hrefById[key]} />;
+            })}
+          </SidebarGroup>
         );
       })}
     </nav>

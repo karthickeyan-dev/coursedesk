@@ -14,6 +14,14 @@ export async function resolveCourseAssetUrl(
   return resolveLocalAssetUrl(course.data.id, raw);
 }
 
+export function courseTitle(course: AvailableCourse): string {
+  return course.data.title?.trim() || "Course";
+}
+
+export function courseAuthor(course: AvailableCourse, fallback = ""): string {
+  return course.data.author?.trim() || fallback;
+}
+
 export function lessonDurationSeconds(lesson: Lesson | null | undefined): number {
   if (!lesson) return 0;
   const raw = lesson.duration;
@@ -27,6 +35,65 @@ export function lessonDurationSeconds(lesson: Lesson | null | undefined): number
 
 export function sumLessonDurations(lessonList: Lesson[]): number {
   return lessonList.reduce((sum, lesson) => sum + lessonDurationSeconds(lesson), 0);
+}
+
+export interface CourseProgress {
+  total: number;
+  done: number;
+  totalSeconds: number;
+  doneSeconds: number;
+  remaining: number;
+  remainingSeconds: number;
+  percent: number;
+}
+
+function progressFromCounts(
+  total: number,
+  done: number,
+  totalSeconds: number,
+  doneSeconds: number
+): CourseProgress {
+  return {
+    total,
+    done,
+    totalSeconds,
+    doneSeconds,
+    remaining: Math.max(total - done, 0),
+    remainingSeconds: Math.max(totalSeconds - doneSeconds, 0),
+    percent: total ? Math.round((done / total) * 100) : 0,
+  };
+}
+
+export function courseProgress(
+  lessons: Lesson[],
+  finished: Set<string>
+): CourseProgress {
+  let done = 0;
+  let totalSeconds = 0;
+  let doneSeconds = 0;
+  for (const lesson of lessons) {
+    const sec = lessonDurationSeconds(lesson);
+    totalSeconds += sec;
+    if (finished.has(lesson.id)) {
+      done += 1;
+      doneSeconds += sec;
+    }
+  }
+  return progressFromCounts(lessons.length, done, totalSeconds, doneSeconds);
+}
+
+export function combineProgress(parts: Iterable<CourseProgress>): CourseProgress {
+  let total = 0;
+  let done = 0;
+  let totalSeconds = 0;
+  let doneSeconds = 0;
+  for (const part of parts) {
+    total += part.total;
+    done += part.done;
+    totalSeconds += part.totalSeconds;
+    doneSeconds += part.doneSeconds;
+  }
+  return progressFromCounts(total, done, totalSeconds, doneSeconds);
 }
 
 export function lectureTypeLabel(

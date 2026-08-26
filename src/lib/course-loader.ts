@@ -44,71 +44,95 @@ function emptyStatus(supported: boolean): LocalFolderStatus {
   };
 }
 
-async function finishWithFolder(
-  wroteGuide: boolean
-): Promise<CoursesLoadState> {
-  const { folderName, courses } = await loadCoursesFromFolder();
-  const folderStatus = await getFolderStatus();
+function loadState(
+  partial: Partial<CoursesLoadState> & { phase: CoursesBootPhase }
+): CoursesLoadState {
   return {
+    courses: [],
+    folderName: null,
+    folderStatus: emptyStatus(isFsAccessSupported()),
+    error: null,
+    wroteGuide: false,
+    ...partial,
+  };
+}
+
+async function safeFolderStatus(): Promise<LocalFolderStatus> {
+  return getFolderStatus().catch(() => emptyStatus(true));
+}
+
+async function errorState(message: string): Promise<CoursesLoadState> {
+  const folderStatus = await safeFolderStatus();
+  return loadState({
+    phase: "error",
+    folderName: folderStatus.folderName,
+    folderStatus,
+    error: message,
+  });
+}
+
+async function finishWithFolder(wroteGuide: boolean): Promise<CoursesLoadState> {
+  const { folderName, courses } = await loadCoursesFromFolder();
+  return loadState({
     phase: "ready",
     courses,
     folderName,
-    folderStatus,
+    folderStatus: await getFolderStatus(),
     error: null,
     wroteGuide,
-  };
+  });
+}
+
+async function ensureAccessAndLoad(opts: {
+  deniedError?: string | null;
+  failMessage: string;
+}): Promise<CoursesLoadState> {
+  try {
+    const access = await ensureFolderAccess(true);
+    if (!access.ok) {
+      const status = await getFolderStatus();
+      return loadState({
+        phase: "needs-permission",
+        folderName: status.folderName,
+        folderStatus: status,
+        error: opts.deniedError ?? null,
+      });
+    }
+    return await finishWithFolder(false);
+  } catch (err) {
+    return errorState(err instanceof Error ? err.message : opts.failMessage);
+  }
 }
 
 /** Boot: restore handle if possible; do not prompt (prompt needs a user gesture). */
 export async function bootLocalCourses(): Promise<CoursesLoadState> {
   if (!isFsAccessSupported()) {
-    return {
+    return loadState({
       phase: "unsupported",
-      courses: [],
-      folderName: null,
       folderStatus: emptyStatus(false),
       error:
         "Local folder access is not supported in this browser. Use Chrome or Edge on desktop.",
-      wroteGuide: false,
-    };
+    });
   }
 
   try {
     const handle = await restoreCoursesFolder();
     if (!handle) {
-      return {
-        phase: "no-folder",
-        courses: [],
-        folderName: null,
-        folderStatus: emptyStatus(true),
-        error: null,
-        wroteGuide: false,
-      };
+      return loadState({ phase: "no-folder", folderStatus: emptyStatus(true) });
     }
 
     const status = await getFolderStatus();
     if (status.permission !== "granted") {
-      return {
+      return loadState({
         phase: "needs-permission",
-        courses: [],
         folderName: handle.name,
         folderStatus: status,
-        error: null,
-        wroteGuide: false,
-      };
+      });
     }
 
-    // Permission already granted — load without requesting again
     return await finishWithFolder(false);
   } catch (err) {
-    return {
-      phase: "error",
-      courses: [],
-      folderName: null,
-      folderStatus: await getFolderStatus().catch(() => emptyStatus(true)),
-      error: err instanceof Error ? err.message : "Failed to load courses",
-      wroteGuide: false,
-    };
+    return errorState(err instanceof Error ? err.message : "Failed to load courses");
   }
 }
 
@@ -131,7 +155,6 @@ export async function selectAndLoadCoursesFolder(): Promise<CoursesLoadState> {
     }
     return await finishWithFolder(wroteGuide);
   } catch (err) {
-    // User cancelled picker
     if (err instanceof DOMException && err.name === "AbortError") {
       const status = await getFolderStatus();
       const phase: CoursesBootPhase = status.hasHandle
@@ -139,90 +162,34 @@ export async function selectAndLoadCoursesFolder(): Promise<CoursesLoadState> {
           ? "ready"
           : "needs-permission"
         : "no-folder";
-      return {
+      return loadState({
         phase,
         courses: phase === "ready" ? getLoadedCourses() : [],
         folderName: status.folderName,
         folderStatus: status,
-        error: null,
-        wroteGuide: false,
-      };
+      });
     }
-    return {
-      phase: "error",
-      courses: [],
-      folderName: null,
-      folderStatus: await getFolderStatus().catch(() => emptyStatus(true)),
-      error: err instanceof Error ? err.message : "Failed to select folder",
-      wroteGuide: false,
-    };
+    return errorState(err instanceof Error ? err.message : "Failed to select folder");
   }
 }
 
 /** Re-authorize after needs-permission (must run from a click). */
 export async function reauthorizeAndLoadCourses(): Promise<CoursesLoadState> {
-  try {
-    const access = await ensureFolderAccess(true);
-    if (!access.ok) {
-      const status = await getFolderStatus();
-      return {
-        phase: "needs-permission",
-        courses: [],
-        folderName: status.folderName,
-        folderStatus: status,
-        error: "Permission was not granted. Click Allow when prompted.",
-        wroteGuide: false,
-      };
-    }
-    return await finishWithFolder(false);
-  } catch (err) {
-    return {
-      phase: "error",
-      courses: [],
-      folderName: null,
-      folderStatus: await getFolderStatus().catch(() => emptyStatus(true)),
-      error: err instanceof Error ? err.message : "Failed to access folder",
-      wroteGuide: false,
-    };
-  }
+  return ensureAccessAndLoad({
+    deniedError: "Permission was not granted. Click Allow when prompted.",
+    failMessage: "Failed to access folder",
+  });
 }
 
 /** Rescan the linked folder (new courses, updated course.json). */
 export async function rescanCoursesFolder(): Promise<CoursesLoadState> {
-  try {
-    const access = await ensureFolderAccess(true);
-    if (!access.ok) {
-      const status = await getFolderStatus();
-      return {
-        phase: "needs-permission",
-        courses: [],
-        folderName: status.folderName,
-        folderStatus: status,
-        error: null,
-        wroteGuide: false,
-      };
-    }
-    return await finishWithFolder(false);
-  } catch (err) {
-    return {
-      phase: "error",
-      courses: [],
-      folderName: (await getFolderStatus()).folderName,
-      folderStatus: await getFolderStatus(),
-      error: err instanceof Error ? err.message : "Rescan failed",
-      wroteGuide: false,
-    };
-  }
+  return ensureAccessAndLoad({ failMessage: "Rescan failed" });
 }
 
 export async function clearLinkedFolder(): Promise<CoursesLoadState> {
   await unlinkCoursesFolder();
-  return {
+  return loadState({
     phase: "no-folder",
-    courses: [],
-    folderName: null,
     folderStatus: emptyStatus(isFsAccessSupported()),
-    error: null,
-    wroteGuide: false,
-  };
+  });
 }

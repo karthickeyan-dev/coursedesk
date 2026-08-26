@@ -13,10 +13,7 @@ type Props = {
   onClick?: (e: MouseEvent) => void;
 };
 
-/**
- * Udemy-style circular completion check — shared by curriculum sidebar
- * and the lecture “Mark as complete” control.
- */
+/** Circular completion check used in the curriculum sidebar and Autoplay control. */
 export function CompletionCheck({
   checked,
   title,

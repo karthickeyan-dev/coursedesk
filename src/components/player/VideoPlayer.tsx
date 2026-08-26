@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { resolveCourseAssetUrl } from "../../lib/assets";
-import * as Storage from "../../lib/storage";
-import { useAppStore } from "../../store/useAppStore";
+import { resolveCourseAssetUrl } from "@/lib/assets";
+import * as Storage from "@/lib/storage";
+import { useAppStore } from "@/store/useAppStore";
 import { PlayerControls } from "./PlayerControls";
 import { PlayerHud } from "./PlayerHud";
 import { useVideoPlayer } from "./useVideoPlayer";
@@ -86,13 +86,7 @@ export function VideoPlayer() {
     showVideo(src, { startTime, autoplay });
   }, [src, activeLessonId, activeCourse, persistTimeNow, hideVideo, showVideo]);
 
-  if (!lesson) return null;
-
-  if (!videoPath) {
-    return (
-      <section className="hidden w-full flex-col bg-black" aria-label="Lecture video" />
-    );
-  }
+  if (!lesson || !videoPath) return null;
 
   if (!src) {
     return (

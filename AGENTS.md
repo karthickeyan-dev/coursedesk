@@ -38,7 +38,6 @@ pnpm lint           # Biome lint
 pnpm lint:fix      # Biome lint --write
 pnpm typecheck      # tsc --noEmit
 pnpm check          # lint + typecheck
-pnpm test
 ```
 
 ---
@@ -134,11 +133,9 @@ Permission re-grant often needs a **user gesture** (`requestPermission`).
 
 ---
 
-## Tests
+## Smoke check
 
-- Unit tests: `src/__tests__/` (storage, format).
-- Prefer pure functions in `lib/` for new testable logic.
-- Manual smoke: pick folder → open course → seek video → toggle theme → rescan.
+Pick folder → open course → seek video → toggle theme → rescan.
 
 ---
 

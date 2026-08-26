@@ -1,11 +1,11 @@
-import { useState } from "react";
 import {
   reauthorizeAndLoadCourses,
   rescanCoursesFolder,
   selectAndLoadCoursesFolder,
-} from "../../lib/course-loader";
-import { applyCoursesResult } from "../../store/boot";
-import { useAppStore } from "../../store/useAppStore";
+} from "@/lib/course-loader";
+import { useBusyAction } from "@/lib/use-busy-action";
+import { runFolderAction } from "@/store/boot";
+import { useAppStore } from "@/store/useAppStore";
 import { CourseCard } from "./CourseCard";
 import { EmptyCoursesState, type EmptyCoursesKind } from "./EmptyCoursesState";
 
@@ -18,19 +18,9 @@ export function CourseLibrary() {
   const coursesPhase = useAppStore((s) => s.coursesPhase);
   const coursesError = useAppStore((s) => s.coursesError);
   const folderName = useAppStore((s) => s.folderName);
-  const [busy, setBusy] = useState(false);
+  const { busy, run } = useBusyAction();
 
   const n = courses.length;
-
-  async function run(fn: () => ReturnType<typeof selectAndLoadCoursesFolder>) {
-    setBusy(true);
-    try {
-      const state = await fn();
-      applyCoursesResult(state);
-    } finally {
-      setBusy(false);
-    }
-  }
 
   if (!coursesLoaded) {
     return (
@@ -60,9 +50,9 @@ export function CourseLibrary() {
             folderName={folderName}
             error={coursesError}
             busy={busy}
-            onChooseFolder={() => void run(selectAndLoadCoursesFolder)}
-            onAllowAccess={() => void run(reauthorizeAndLoadCourses)}
-            onRescan={() => void run(rescanCoursesFolder)}
+            onChooseFolder={() => void run(() => runFolderAction(selectAndLoadCoursesFolder))}
+            onAllowAccess={() => void run(() => runFolderAction(reauthorizeAndLoadCourses))}
+            onRescan={() => void run(() => runFolderAction(rescanCoursesFolder))}
           />
         </div>
       </div>

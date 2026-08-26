@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { hasNotes } from "@/lib/notes";
 import { useAppStore } from "@/store/useAppStore";
-import { VideoPlayer } from "../player/VideoPlayer";
+import { VideoPlayer } from "@/components/player/VideoPlayer";
 import { LectureBar } from "./LectureBar";
 import { NotesPanel } from "./NotesPanel";
 

@@ -54,11 +54,6 @@ export function pathExtension(path: string): string | null {
   return m ? m[1].toLowerCase() : null;
 }
 
-export function extensionLabel(path: string): string {
-  const ext = pathExtension(path);
-  return ext ? ext.toUpperCase() : "FILE";
-}
-
 /** Extension drawn inside the file icon. */
 export function fileIconLabel(path: string): string {
   const ext = pathExtension(path);

@@ -13,6 +13,9 @@ import { cn } from "@/lib/utils";
 import { CategorySection } from "./CategorySection";
 import { FilesPanel } from "./FilesPanel";
 
+const tabTriggerClass =
+  "rounded-none border-0 border-b-2 border-transparent px-3.5 py-3 text-[0.88rem] font-semibold shadow-none data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-text data-[state=active]:shadow-none";
+
 function CurriculumPanel({ className }: { className?: string }) {
   const categories = useAppStore((s) => s.categories);
   const lessons = useAppStore((s) => s.lessons);
@@ -44,13 +47,6 @@ function CurriculumPanel({ className }: { className?: string }) {
         ?.scrollIntoView({ block: "nearest" });
     });
   }, [activeLessonId]);
-
-  // Leave Files if the course has no resources
-  useEffect(() => {
-    if (!hasFiles && sidebarTab === "files") {
-      setSidebarTab("content");
-    }
-  }, [hasFiles, sidebarTab, setSidebarTab]);
 
   const contentNav = (
     <nav className="block w-full min-w-0">
@@ -85,17 +81,11 @@ function CurriculumPanel({ className }: { className?: string }) {
       >
         <div className="relative shrink-0">
           <TabsList className="h-auto w-full justify-start rounded-none border-b border-border bg-elevated p-0 px-3">
-            <TabsTrigger
-              value="content"
-              className="rounded-none border-0 border-b-2 border-transparent px-3.5 py-3 text-[0.88rem] font-semibold shadow-none data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-text data-[state=active]:shadow-none"
-            >
+            <TabsTrigger value="content" className={tabTriggerClass}>
               Content
             </TabsTrigger>
             {hasFiles ? (
-              <TabsTrigger
-                value="files"
-                className="rounded-none border-0 border-b-2 border-transparent px-3.5 py-3 text-[0.88rem] font-semibold shadow-none data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-text data-[state=active]:shadow-none"
-              >
+              <TabsTrigger value="files" className={tabTriggerClass}>
                 Files
               </TabsTrigger>
             ) : null}
@@ -128,15 +118,14 @@ function CurriculumPanel({ className }: { className?: string }) {
   );
 }
 
-export function CurriculumSidebar({ collapsed }: { collapsed?: boolean }) {
+export function CurriculumSidebar() {
   const isNarrow = useMediaQuery("(max-width: 979px)");
   const curriculumOpen = useAppStore((s) => s.curriculumOpen);
   const setCurriculumOpen = useAppStore((s) => s.setCurriculumOpen);
-  const open = !collapsed && curriculumOpen;
 
   if (isNarrow) {
     return (
-      <Sheet open={open} onOpenChange={setCurriculumOpen}>
+      <Sheet open={curriculumOpen} onOpenChange={setCurriculumOpen}>
         <SheetContent
           side="right"
           className="flex w-(--spacing-sidebar) max-w-[min(22.5rem,92vw)] flex-col gap-0 border-l border-border bg-elevated p-0 sm:max-w-[min(22.5rem,92vw)]"
@@ -150,7 +139,7 @@ export function CurriculumSidebar({ collapsed }: { collapsed?: boolean }) {
     );
   }
 
-  if (collapsed) return null;
+  if (!curriculumOpen) return null;
 
   return (
     <div className="relative flex min-h-0 min-w-0 w-(--spacing-sidebar) max-w-full flex-col">

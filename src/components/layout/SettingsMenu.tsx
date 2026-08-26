@@ -26,28 +26,25 @@ import {
   downloadPackagingGuide,
   writePackagingGuide,
 } from "@/lib/local-courses";
-import { applyCoursesResult } from "@/store/boot";
+import { useBusyAction } from "@/lib/use-busy-action";
+import { runFolderAction } from "@/store/boot";
 import { useAppStore } from "@/store/useAppStore";
 
 export function SettingsMenu() {
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const { busy, run: runBusy } = useBusyAction();
 
   const folderName = useAppStore((s) => s.folderName);
   const coursesPhase = useAppStore((s) => s.coursesPhase);
   const folderStatus = useAppStore((s) => s.folderStatus);
 
-  async function run(action: () => Promise<void>, okMsg?: string) {
-    setBusy(true);
+  async function run(action: () => Promise<void>) {
     setMessage(null);
     try {
-      await action();
-      if (okMsg) setMessage(okMsg);
+      await runBusy(action);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Action failed");
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -104,8 +101,7 @@ export function SettingsMenu() {
           onSelect={(e) => {
             keepOpen(e);
             void run(async () => {
-              const state = await selectAndLoadCoursesFolder();
-              applyCoursesResult(state);
+              const state = await runFolderAction(selectAndLoadCoursesFolder);
               if (state.wroteGuide) {
                 setMessage("Folder linked. COURSE_TEMPLATE.md saved.");
               } else if (state.phase === "ready") {
@@ -130,8 +126,7 @@ export function SettingsMenu() {
             onSelect={(e) => {
               keepOpen(e);
               void run(async () => {
-                const state = await reauthorizeAndLoadCourses();
-                applyCoursesResult(state);
+                const state = await runFolderAction(reauthorizeAndLoadCourses);
                 setMessage(
                   state.phase === "ready"
                     ? "Access granted."
@@ -150,8 +145,7 @@ export function SettingsMenu() {
           onSelect={(e) => {
             keepOpen(e);
             void run(async () => {
-              const state = await rescanCoursesFolder();
-              applyCoursesResult(state);
+              const state = await runFolderAction(rescanCoursesFolder);
               setMessage(
                 state.phase === "ready"
                   ? `Rescanned — ${state.courses.length} course(s).`
@@ -206,8 +200,7 @@ export function SettingsMenu() {
               onSelect={(e) => {
                 keepOpen(e);
                 void run(async () => {
-                  const state = await clearLinkedFolder();
-                  applyCoursesResult(state);
+                  await runFolderAction(clearLinkedFolder);
                   setMessage("Folder link cleared.");
                 });
               }}
