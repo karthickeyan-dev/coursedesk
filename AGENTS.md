@@ -64,7 +64,7 @@ src/
     assets.ts                 # resolveCourseAssetUrl, library helpers
     notes.ts, format.ts
     course-package.ts         # parse course.json → CourseData
-    course-notes-files.ts     # notes/*.md → lesson-id map + notes.js merge
+    course-notes-files.ts     # notes/*.md → lesson-id map
   styles/styles.css
   types/course.ts
 public/
@@ -80,8 +80,8 @@ netlify.toml                  # static deploy + SPA redirect
 ### Courses
 
 1. **Never** hardcode course ids or curricula in app source.
-2. Packages: `course.json` is the curriculum object. Notes are `notes/<lesson-id>.md`. **Never** `import()` a course package. Legacy `course.js` (IIFE on `window.COURSES`) still loads if JSON is absent; `notes.js` still fills missing keys on that path only.
-3. Load path: pick/restore folder → scan children with `course.json` (or `course.js`) → `JSON.parse` (or script eval) → read `notes/*.md` → `AvailableCourse[]`.
+2. Packages: `course.json` is the curriculum object. Notes are `notes/<lesson-id>.md`. **Never** `import()` a course package. Do not load `course.js` or `notes.js`.
+3. Load path: pick/restore folder → scan children with `course.json` → `JSON.parse` → read `notes/*.md` → `AvailableCourse[]`.
 4. Media: `resolveCourseAssetUrl` → local `blob:` URLs. Lazy cache; revoke on rescan/unlink.
 5. Keep lesson `id`s stable — they are progress keys.
 

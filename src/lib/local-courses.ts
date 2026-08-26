@@ -3,14 +3,10 @@
  * Sole course source: user-selected directory (no HTTP /courses server).
  */
 import type { AvailableCourse, CourseData, CourseNotesMap } from "../types/course";
-import {
-  mergeCourseNotes,
-  notesMapFromMarkdownFiles,
-} from "./course-notes-files";
+import { notesMapFromMarkdownFiles } from "./course-notes-files";
 import {
   availableCourseFromPackage,
   COURSE_PACKAGE_FILENAME,
-  LEGACY_COURSE_SCRIPT_FILENAME,
   parseCoursePackage,
 } from "./course-package";
 import {
@@ -93,10 +89,6 @@ export function clearLocalSession(): void {
   courseDirs.clear();
   lastLoadedCourses = [];
   rootHandle = null;
-  if (typeof window !== "undefined") {
-    window.COURSES = {};
-    window.COURSE_NOTES = {};
-  }
 }
 
 async function perm(
@@ -242,45 +234,6 @@ async function readTextFile(
   return file.text();
 }
 
-function loadScriptFromBlobUrl(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = src;
-    s.async = false;
-    s.onload = () => {
-      s.remove();
-      resolve();
-    };
-    s.onerror = () => {
-      s.remove();
-      reject(new Error(`Failed to load script ${src}`));
-    };
-    document.head.appendChild(s);
-  });
-}
-
-async function runPackageScript(source: string, label: string): Promise<void> {
-  const blob = new Blob([source], { type: "text/javascript" });
-  const url = URL.createObjectURL(blob);
-  try {
-    await loadScriptFromBlobUrl(url);
-  } catch {
-    throw new Error(`Failed to evaluate ${label}`);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
-function courseDataFromJsRegistry(folderId: string): CourseData | null {
-  const reg = window.COURSES || {};
-  const data =
-    reg[folderId] || Object.values(reg).find((course) => course?.id === folderId);
-  if (!data || !Array.isArray(data.lessons)) return null;
-  data.root = `courses/${folderId}`;
-  data.id = folderId;
-  return data;
-}
-
 async function* directoryEntries(
   root: FileSystemDirectoryHandle
 ): AsyncGenerator<[string, FileSystemHandle]> {
@@ -300,22 +253,16 @@ async function* directoryEntries(
   }
 }
 
-type PackageFormat = "json" | "js";
-
 async function discoverCourseFolders(
   root: FileSystemDirectoryHandle
-): Promise<{ id: string; format: PackageFormat }[]> {
-  const found: { id: string; format: PackageFormat }[] = [];
+): Promise<string[]> {
+  const found: string[] = [];
   for await (const [name, handle] of directoryEntries(root)) {
     if (handle.kind !== "directory") continue;
     const dir = handle as FileSystemDirectoryHandle;
-    if (await hasFile(dir, COURSE_PACKAGE_FILENAME)) {
-      found.push({ id: name, format: "json" });
-    } else if (await hasFile(dir, LEGACY_COURSE_SCRIPT_FILENAME)) {
-      found.push({ id: name, format: "js" });
-    }
+    if (await hasFile(dir, COURSE_PACKAGE_FILENAME)) found.push(name);
   }
-  found.sort((a, b) => a.id.localeCompare(b.id));
+  found.sort((a, b) => a.localeCompare(b));
   return found;
 }
 
@@ -353,44 +300,13 @@ async function readNotesMarkdownFolder(
 
 async function loadNotesForCourse(
   dir: FileSystemDirectoryHandle,
-  data: CourseData,
-  allowLegacyNotesJs: boolean
+  data: CourseData
 ): Promise<CourseNotesMap> {
-  const lessonIds = lessonIdsFromData(data);
-  const fromFiles = await readNotesMarkdownFolder(dir, lessonIds);
-  if (!allowLegacyNotesJs) return fromFiles;
-
-  let fromScript: CourseNotesMap = {};
-  if (await hasFile(dir, "notes.js")) {
-    try {
-      const notesJs = await readTextFile(dir, "notes.js");
-      await runPackageScript(notesJs, `${data.id}/notes.js`);
-      fromScript = window.COURSE_NOTES?.[data.id] || {};
-    } catch {
-      /* optional */
-    }
-  }
-
-  return mergeCourseNotes(fromFiles, fromScript);
-}
-
-async function loadLegacyCourseScript(
-  dir: FileSystemDirectoryHandle,
-  folderId: string
-): Promise<CourseData> {
-  const courseJs = await readTextFile(dir, LEGACY_COURSE_SCRIPT_FILENAME);
-  await runPackageScript(courseJs, `${folderId}/${LEGACY_COURSE_SCRIPT_FILENAME}`);
-  const data = courseDataFromJsRegistry(folderId);
-  if (!data) {
-    throw new Error(
-      `${LEGACY_COURSE_SCRIPT_FILENAME} did not register a course for "${folderId}"`
-    );
-  }
-  return data;
+  return readNotesMarkdownFolder(dir, lessonIdsFromData(data));
 }
 
 /**
- * Scan root handle, load course.json (or legacy course.js) and notes.
+ * Scan root handle, load course.json and notes/*.md.
  * Requires an already-permissioned rootHandle.
  */
 export async function loadCoursesFromFolder(): Promise<LocalLoadResult> {
@@ -401,21 +317,19 @@ export async function loadCoursesFromFolder(): Promise<LocalLoadResult> {
   revokeAllBlobUrls();
   courseDirs.clear();
   lastLoadedCourses = [];
-  window.COURSES = {};
-  window.COURSE_NOTES = {};
 
   const discovered = await discoverCourseFolders(rootHandle);
   const courses: AvailableCourse[] = [];
 
-  for (const { id, format } of discovered) {
+  for (const id of discovered) {
     try {
       const dir = await rootHandle.getDirectoryHandle(id);
       courseDirs.set(id, dir);
-      const data =
-        format === "json"
-          ? parseCoursePackage(await readTextFile(dir, COURSE_PACKAGE_FILENAME), id)
-          : await loadLegacyCourseScript(dir, id);
-      const notes = await loadNotesForCourse(dir, data, format === "js");
+      const data = parseCoursePackage(
+        await readTextFile(dir, COURSE_PACKAGE_FILENAME),
+        id
+      );
+      const notes = await loadNotesForCourse(dir, data);
       courses.push(availableCourseFromPackage(data, notes));
     } catch (err) {
       console.warn(

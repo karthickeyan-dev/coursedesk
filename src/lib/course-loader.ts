@@ -1,6 +1,6 @@
 /**
  * Load courses from the user-selected local folder only.
- * Packages are course.json (legacy course.js still evaluates if JSON is absent).
+ * Packages are course.json; notes are notes/<lesson-id>.md.
  */
 import type { AvailableCourse } from "../types/course";
 import {

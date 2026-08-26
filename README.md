@@ -70,7 +70,7 @@ Select the **root** folder that holds course packages:
     videos/
 ```
 
-**Discovery:** any **immediate child** of the root that contains `course.json` is a course. (A legacy `course.js` still loads if JSON is missing.)
+**Discovery:** any **immediate child** of the root that contains `course.json` is a course.
 
 **After adding or editing a package on disk:** Settings → **Rescan folder** (or reload the page once access is already granted).
 

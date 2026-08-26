@@ -1,7 +1,6 @@
 import type { AvailableCourse, CourseData, CourseNotesMap } from "../types/course";
 
 export const COURSE_PACKAGE_FILENAME = "course.json";
-export const LEGACY_COURSE_SCRIPT_FILENAME = "course.js";
 
 /** Parse a course.json document. Folder name is the source of truth for `id`. */
 export function parseCoursePackage(jsonText: string, folderId: string): CourseData {

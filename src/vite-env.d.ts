@@ -1,11 +1,9 @@
 /// <reference types="vite/client" />
 
-import type { CourseData, CourseNotesMap } from "./types/course";
+export {};
 
 declare global {
   interface Window {
-    COURSES?: Record<string, CourseData>;
-    COURSE_NOTES?: Record<string, CourseNotesMap>;
     showDirectoryPicker?: (options?: {
       id?: string;
       mode?: "read" | "readwrite";

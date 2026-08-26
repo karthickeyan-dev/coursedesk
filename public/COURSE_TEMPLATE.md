@@ -195,7 +195,7 @@ Drop the folder here and **Rescan** in the player.
 - Do not leave an empty `notes/` folder if there are no notes — omit it.
 - Do not put course details in the CourseDesk app source.
 - Do not nest courses more than one level deep under this root.
-- Do not write `course.js` or `notes.js` for new packages. Legacy `course.js` (and optional `notes.js`) still load if `course.json` is absent.
+- Do not write `course.js` or `notes.js`. CourseDesk only reads `course.json` and `notes/<lesson-id>.md`.
 
 ---
 

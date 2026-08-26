@@ -28,11 +28,3 @@ export function notesMapFromMarkdownFiles(
   }
   return out;
 }
-
-/** Per-lesson `.md` files win over a legacy `notes.js` map. */
-export function mergeCourseNotes(
-  fromFiles: CourseNotesMap,
-  fromScript: CourseNotesMap
-): CourseNotesMap {
-  return { ...fromScript, ...fromFiles };
-}

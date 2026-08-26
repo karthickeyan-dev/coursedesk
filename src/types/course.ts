@@ -23,7 +23,7 @@ export interface CourseResource {
   group?: string;
 }
 
-/** Curriculum + metadata from course.json (or a legacy course.js package). */
+/** Curriculum + metadata from course.json. */
 export interface CourseData {
   id: string;
   root?: string;
