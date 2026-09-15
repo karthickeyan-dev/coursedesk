@@ -1,27 +1,4 @@
-:root[data-theme="light"] {
-  --th-background: #ffffff;
-  --th-token: #24292f;
-  --th-attr: #0550ae;
-  --th-code-inline: #953800;
-  --th-command: #8250df;
-  --th-comment: #6e7781;
-  --th-deleted: #cf222e;
-  --th-function: #8250df;
-  --th-heading: #0550ae;
-  --th-inserted: #1a7f37;
-  --th-keyword: #cf222e;
-  --th-link: #0969da;
-  --th-literal: #0550ae;
-  --th-meta: #57606a;
-  --th-number: #0550ae;
-  --th-operator: #8250df;
-  --th-property: #0550ae;
-  --th-selector: #116329;
-  --th-string: #0a7f64;
-  --th-tag: #116329;
-  --th-type: #953800;
-  --th-variable: #953800;
-}
+
 
 :root {
   /* Monokai Pro Filter Spectrum */

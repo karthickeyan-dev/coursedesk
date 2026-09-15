@@ -134,10 +134,6 @@
   --shadow-lg: 0 12px 28px rgba(28, 29, 31, 0.12);
   --lib-glow-1: rgba(164, 53, 240, 0.1);
   --lib-glow-2: rgba(25, 135, 84, 0.05);
-  --code-bg: #f6f8fa;
-  --code-fg: #24292f;
-  --code-border: #d0d7de;
-  --code-lang: #6e7781;
 }
 
 @font-face {
@@ -549,6 +545,7 @@ button {
   line-height: 1.65;
   padding: 0.85rem 1rem 1rem;
   background: transparent;
+  color: var(--code-fg);
   border: none;
   border-radius: 0;
   overflow-x: auto;
