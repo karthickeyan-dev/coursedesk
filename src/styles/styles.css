@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./highlight.css";
 
 /* Design tokens → Tailwind theme (product + shadcn semantic colors) */
 @theme {
@@ -95,10 +96,10 @@
   --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.35);
   --lib-glow-1: rgba(164, 53, 240, 0.18);
   --lib-glow-2: rgba(25, 195, 125, 0.06);
-  --code-bg: #0d1117;
-  --code-fg: #c9d1d9;
-  --code-border: #30363d;
-  --code-lang: #8b949e;
+  --code-bg: #222222;
+  --code-fg: #f8f8f2;
+  --code-border: #444444;
+  --code-lang: #727072;
   --font: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -133,6 +134,10 @@
   --shadow-lg: 0 12px 28px rgba(28, 29, 31, 0.12);
   --lib-glow-1: rgba(164, 53, 240, 0.1);
   --lib-glow-2: rgba(25, 135, 84, 0.05);
+  --code-bg: #f6f8fa;
+  --code-fg: #24292f;
+  --code-border: #d0d7de;
+  --code-lang: #6e7781;
 }
 
 @font-face {

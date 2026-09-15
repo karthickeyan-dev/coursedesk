@@ -4,7 +4,6 @@ import "@fontsource-variable/inter";
 import { App } from "./App";
 import { bootCourses } from "./store/boot";
 import "./styles/styles.css";
-import "highlight.js/styles/github-dark.css";
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Missing #root");
