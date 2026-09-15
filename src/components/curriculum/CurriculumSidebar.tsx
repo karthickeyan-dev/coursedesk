@@ -1,20 +1,15 @@
 import { useEffect, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { useAppStore } from "@/store/useAppStore";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useAppStore";
 import { CategorySection } from "./CategorySection";
 import { FilesPanel } from "./FilesPanel";
 
 const tabTriggerClass =
-  "rounded-none border-0 border-b-2 border-transparent px-3.5 py-3 text-[0.88rem] font-semibold shadow-none data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-text data-[state=active]:shadow-none";
+  "rounded-none border-0 border-b-2 border-transparent px-3.5 py-3 text-[0.88rem] font-semibold shadow-none data-active:border-accent data-active:bg-transparent data-active:text-text data-active:shadow-none";
 
 function CurriculumPanel({ className }: { className?: string }) {
   const categories = useAppStore((s) => s.categories);
@@ -26,8 +21,7 @@ function CurriculumPanel({ className }: { className?: string }) {
 
   const resources = activeCourse?.data?.resources;
   const hasFiles = Array.isArray(resources) && resources.length > 0;
-  const tab =
-    hasFiles && sidebarTab === "files" ? "files" : "content";
+  const tab = hasFiles && sidebarTab === "files" ? "files" : "content";
 
   const lessonsByCategory = useMemo(() => {
     const map = new Map<string, typeof lessons>();
@@ -66,17 +60,10 @@ function CurriculumPanel({ className }: { className?: string }) {
   );
 
   return (
-    <div
-      className={cn(
-        "flex min-h-0 min-w-0 flex-1 flex-col bg-elevated",
-        className
-      )}
-    >
+    <div className={cn("flex min-h-0 min-w-0 flex-1 flex-col bg-elevated", className)}>
       <Tabs
         value={tab}
-        onValueChange={(value) =>
-          setSidebarTab(value === "files" ? "files" : "content")
-        }
+        onValueChange={(value) => setSidebarTab(value === "files" ? "files" : "content")}
         className="flex min-h-0 w-full flex-1 flex-col gap-0"
       >
         <div className="relative shrink-0">
@@ -93,18 +80,16 @@ function CurriculumPanel({ className }: { className?: string }) {
         </div>
         <TabsContent
           value="content"
-          className="mt-0 min-h-0 w-full flex-1 overflow-hidden data-[state=inactive]:hidden"
+          className="mt-0 min-h-0 w-full flex-1 overflow-hidden data-hidden:hidden"
         >
           <ScrollArea className="h-full w-full">
-            <div className="w-full min-w-full [scrollbar-gutter:stable]">
-              {contentNav}
-            </div>
+            <div className="w-full min-w-full [scrollbar-gutter:stable]">{contentNav}</div>
           </ScrollArea>
         </TabsContent>
         {hasFiles ? (
           <TabsContent
             value="files"
-            className="mt-0 min-h-0 w-full flex-1 overflow-hidden data-[state=inactive]:hidden"
+            className="mt-0 min-h-0 w-full flex-1 overflow-hidden data-hidden:hidden"
           >
             <ScrollArea className="h-full w-full">
               <div className="w-full min-w-full [scrollbar-gutter:stable]">

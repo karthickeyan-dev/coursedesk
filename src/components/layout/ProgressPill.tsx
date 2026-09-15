@@ -1,26 +1,14 @@
 import { Check, Clock, Layers } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { formatDurationTotal } from "@/lib/format";
 import { progressAriaLabel, selectProgressStats } from "@/store/selectors";
 import { useAppStore } from "@/store/useAppStore";
 
 export function ProgressPill() {
   const stats = useAppStore(useShallow(selectProgressStats));
-  const {
-    total,
-    done,
-    remaining,
-    totalSeconds,
-    doneSeconds,
-    remainingSeconds,
-    percent,
-    overall,
-  } = stats;
+  const { total, done, remaining, totalSeconds, doneSeconds, remainingSeconds, percent, overall } =
+    stats;
   const empty = total === 0;
   const fmt = formatDurationTotal;
 
@@ -53,8 +41,8 @@ export function ProgressPill() {
   if (empty) return trigger;
 
   return (
-    <HoverCard openDelay={120} closeDelay={80}>
-      <HoverCardTrigger asChild>{trigger}</HoverCardTrigger>
+    <HoverCard>
+      <HoverCardTrigger delay={120} closeDelay={80} render={trigger} />
       <HoverCardContent
         align="end"
         sideOffset={10}
@@ -69,11 +57,7 @@ export function ProgressPill() {
                 className="border-b border-border px-3 pb-2 text-right text-[11px] font-semibold text-muted-2"
               >
                 <span className="inline-flex items-center justify-end gap-1.5">
-                  <Layers
-                    className="block shrink-0 text-muted-2"
-                    size={14}
-                    aria-hidden
-                  />
+                  <Layers className="block shrink-0 text-muted-2" size={14} aria-hidden />
                   Total
                 </span>
               </th>
@@ -82,11 +66,7 @@ export function ProgressPill() {
                 className="border-b border-border px-3 pb-2 text-right text-[11px] font-semibold text-muted-2"
               >
                 <span className="inline-flex items-center justify-end gap-1.5">
-                  <Check
-                    className="block shrink-0 text-muted-2"
-                    size={14}
-                    aria-hidden
-                  />
+                  <Check className="block shrink-0 text-muted-2" size={14} aria-hidden />
                   Completed
                 </span>
               </th>
@@ -95,11 +75,7 @@ export function ProgressPill() {
                 className="border-b border-border px-3 pb-2 text-right text-[11px] font-semibold text-muted-2"
               >
                 <span className="inline-flex items-center justify-end gap-1.5">
-                  <Clock
-                    className="block shrink-0 text-muted-2"
-                    size={14}
-                    aria-hidden
-                  />
+                  <Clock className="block shrink-0 text-muted-2" size={14} aria-hidden />
                   Remaining
                 </span>
               </th>
@@ -107,21 +83,12 @@ export function ProgressPill() {
           </thead>
           <tbody>
             <tr>
-              <th
-                scope="row"
-                className="pr-4 pl-0.5 text-left font-medium text-muted-foreground"
-              >
+              <th scope="row" className="pr-4 pl-0.5 text-left font-medium text-muted-foreground">
                 Lectures
               </th>
-              <td className="px-3 py-1.5 text-right font-semibold text-foreground">
-                {total}
-              </td>
-              <td className="px-3 py-1.5 text-right font-semibold text-foreground">
-                {done}
-              </td>
-              <td className="px-3 py-1.5 text-right font-semibold text-foreground">
-                {remaining}
-              </td>
+              <td className="px-3 py-1.5 text-right font-semibold text-foreground">{total}</td>
+              <td className="px-3 py-1.5 text-right font-semibold text-foreground">{done}</td>
+              <td className="px-3 py-1.5 text-right font-semibold text-foreground">{remaining}</td>
             </tr>
             <tr>
               <th

@@ -57,28 +57,38 @@ function ResourceRow({
       </span>
       <span className="flex items-center gap-0.5">
         {href && canView ? (
-          <Button asChild variant="ghost" size="icon" className={fileActionClass}>
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="View in browser"
-              aria-label={`View ${label} in browser`}
-            >
-              <ExternalLink />
-            </a>
+          <Button
+            render={
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View in browser"
+                aria-label={`View ${label} in browser`}
+              />
+            }
+            variant="ghost"
+            size="icon"
+            className={fileActionClass}
+          >
+            <ExternalLink />
           </Button>
         ) : null}
         {href ? (
-          <Button asChild variant="ghost" size="icon" className={fileActionClass}>
-            <a
-              href={href}
-              download={fileBasename(item.path)}
-              title="Download"
-              aria-label={`Download ${label}`}
-            >
-              <Download />
-            </a>
+          <Button
+            render={
+              <a
+                href={href}
+                download={fileBasename(item.path)}
+                title="Download"
+                aria-label={`Download ${label}`}
+              />
+            }
+            variant="ghost"
+            size="icon"
+            className={fileActionClass}
+          >
+            <Download />
           </Button>
         ) : null}
       </span>

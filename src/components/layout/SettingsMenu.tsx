@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -53,11 +54,6 @@ export function SettingsMenu() {
     coursesPhase === "ready" ||
     coursesPhase === "needs-permission";
 
-  /** Keep menu open so status messages remain visible after actions. */
-  const keepOpen = (e: Event) => {
-    e.preventDefault();
-  };
-
   return (
     <DropdownMenu
       open={open}
@@ -66,40 +62,44 @@ export function SettingsMenu() {
         if (!next) setMessage(null);
       }}
     >
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="rounded-full text-tb-text hover:bg-tb-hover hover:text-tb-text focus-visible:ring-offset-tb"
-          title="Settings"
-          aria-label="Settings"
-        >
-          <Settings className="size-[18px]" strokeWidth={2} />
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="rounded-full text-tb-text hover:bg-tb-hover hover:text-tb-text focus-visible:ring-offset-tb"
+            title="Settings"
+            aria-label="Settings"
+          >
+            <Settings className="size-[18px]" strokeWidth={2} />
+          </Button>
+        }
+      />
       <DropdownMenuContent
         align="end"
         className="w-[min(300px,calc(100vw-24px))] border-0 shadow-pop"
         sideOffset={8}
       >
-        <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
-          <span className="text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
-            Courses folder
-          </span>
-          <span
-            className="truncate text-sm font-medium"
-            title={folderName || undefined}
-          >
-            {folderName ? folderName : "Not selected"}
-          </span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex flex-col gap-0.5 font-normal">
+            <span className="text-[11px] font-medium tracking-[0.06em] text-muted-foreground uppercase">
+              Courses folder
+            </span>
+            <span
+              className="truncate text-sm font-medium"
+              title={folderName || undefined}
+            >
+              {folderName ? folderName : "Not selected"}
+            </span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
           disabled={busy}
-          onSelect={(e) => {
-            keepOpen(e);
+          closeOnClick={false}
+          onClick={() => {
             void run(async () => {
               const state = await runFolderAction(selectAndLoadCoursesFolder);
               if (state.wroteGuide) {
@@ -123,8 +123,8 @@ export function SettingsMenu() {
         {coursesPhase === "needs-permission" ? (
           <DropdownMenuItem
             disabled={busy}
-            onSelect={(e) => {
-              keepOpen(e);
+            closeOnClick={false}
+            onClick={() => {
               void run(async () => {
                 const state = await runFolderAction(reauthorizeAndLoadCourses);
                 setMessage(
@@ -142,8 +142,8 @@ export function SettingsMenu() {
 
         <DropdownMenuItem
           disabled={busy || !folderName || coursesPhase === "needs-permission"}
-          onSelect={(e) => {
-            keepOpen(e);
+          closeOnClick={false}
+          onClick={() => {
             void run(async () => {
               const state = await runFolderAction(rescanCoursesFolder);
               setMessage(
@@ -160,8 +160,8 @@ export function SettingsMenu() {
 
         <DropdownMenuItem
           disabled={busy || !folderName}
-          onSelect={(e) => {
-            keepOpen(e);
+          closeOnClick={false}
+          onClick={() => {
             void run(async () => {
               try {
                 await writePackagingGuide();
@@ -181,8 +181,8 @@ export function SettingsMenu() {
 
         <DropdownMenuItem
           disabled={busy}
-          onSelect={(e) => {
-            keepOpen(e);
+          closeOnClick={false}
+          onClick={() => {
             downloadPackagingGuide();
             setMessage("Downloaded COURSE_TEMPLATE.md.");
           }}
@@ -196,9 +196,9 @@ export function SettingsMenu() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               disabled={busy}
+              closeOnClick={false}
               className="text-destructive focus:text-destructive"
-              onSelect={(e) => {
-                keepOpen(e);
+              onClick={() => {
                 void run(async () => {
                   await runFolderAction(clearLinkedFolder);
                   setMessage("Folder link cleared.");

@@ -40,7 +40,7 @@ export function LectureBar() {
               decorative
               className={
                 autoplay
-                  ? "data-[state=checked]:border-accent data-[state=checked]:bg-accent"
+                  ? "data-checked:border-accent data-checked:bg-accent"
                   : "!border-[var(--btn-secondary-border)]"
               }
             />
