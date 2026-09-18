@@ -41,7 +41,7 @@ export function LessonView() {
     return (
       <div className="grid min-h-full place-items-center p-6 text-center">
         <div>
-          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-accent-soft text-accent">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-border/40 text-muted-2">
             <FileX2 size={24} strokeWidth={1.5} />
           </div>
           <strong className="text-base text-foreground">
@@ -57,9 +57,9 @@ export function LessonView() {
 
   return (
     <div>
-      {hasVideo ? <VideoPlayer /> : null}
-      <LectureBar />
-      {notesExist ? <NotesPanel markdown={notes} /> : null}
+      {hasVideo && <VideoPlayer />}
+      {hasVideo && <LectureBar />}
+      {notesExist && <NotesPanel markdown={notes} />}
     </div>
   );
 }
